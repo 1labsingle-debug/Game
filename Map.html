@@ -1,0 +1,2709 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Sk8 World - Mapa</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #10131a;
+    color: white;
+    touch-action: none;
+}
+
+/* =========================================================
+   APP
+========================================================= */
+
+#app {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background:
+        radial-gradient(circle at center, #263445 0%, #121722 70%);
+}
+
+/* =========================================================
+   TOP BAR
+========================================================= */
+
+.topbar {
+    position: absolute;
+    z-index: 1000;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 64px;
+
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+
+    padding: 8px 14px;
+
+    background: rgba(9, 12, 18, .92);
+    backdrop-filter: blur(12px);
+
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.logo {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    font-weight: 900;
+    letter-spacing: 1px;
+}
+
+.logo-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 12px;
+
+    display: grid;
+    place-items: center;
+
+    background: linear-gradient(135deg,#ffcf33,#ff5d36);
+    color: #111;
+    font-size: 21px;
+}
+
+.logo span {
+    color: #fff;
+}
+
+.top-actions {
+    display: flex;
+    gap: 7px;
+}
+
+.top-btn {
+    border: 0;
+    color: white;
+    background: #1c2431;
+    border: 1px solid rgba(255,255,255,.08);
+
+    padding: 9px 12px;
+    border-radius: 10px;
+
+    font-weight: bold;
+    font-size: 12px;
+
+    cursor: pointer;
+}
+
+.top-btn:active {
+    transform: scale(.95);
+}
+
+/* =========================================================
+   HUD
+========================================================= */
+
+.hud {
+    position: absolute;
+    z-index: 900;
+    top: 76px;
+    left: 12px;
+
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+}
+
+.hud-card {
+    background: rgba(10,14,21,.86);
+    border: 1px solid rgba(255,255,255,.08);
+
+    border-radius: 12px;
+    padding: 8px 11px;
+
+    font-size: 12px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.2);
+}
+
+.hud-card strong {
+    color: #ffd447;
+}
+
+/* =========================================================
+   MAP VIEWPORT
+========================================================= */
+
+#viewport {
+    position: absolute;
+    left: 0;
+    top: 64px;
+    right: 0;
+    bottom: 0;
+
+    overflow: hidden;
+
+    background:
+        linear-gradient(
+            135deg,
+            #1c2930 25%,
+            #202d35 25%,
+            #202d35 50%,
+            #1c2930 50%,
+            #1c2930 75%,
+            #202d35 75%
+        );
+
+    background-size: 70px 70px;
+}
+
+/* =========================================================
+   ISOMETRIC WORLD
+========================================================= */
+
+#world {
+    position: absolute;
+
+    width: 1800px;
+    height: 1300px;
+
+    left: 50%;
+    top: 50%;
+
+    transform:
+        translate(-50%, -50%)
+        scale(.72);
+
+    transform-origin: center center;
+
+    transition: transform .05s linear;
+}
+
+/* =========================================================
+   GROUND
+========================================================= */
+
+.ground {
+    position: absolute;
+
+    left: 300px;
+    top: 180px;
+
+    width: 1200px;
+    height: 850px;
+
+    background:
+        linear-gradient(
+            45deg,
+            #526657 25%,
+            #596e5e 25%,
+            #596e5e 50%,
+            #526657 50%,
+            #526657 75%,
+            #596e5e 75%
+        );
+
+    background-size: 80px 80px;
+
+    transform:
+        rotateX(55deg)
+        rotateZ(45deg);
+
+    border: 12px solid #303b35;
+
+    box-shadow:
+        0 35px 60px rgba(0,0,0,.45);
+}
+
+/* =========================================================
+   ROADS
+========================================================= */
+
+.road {
+    position: absolute;
+
+    background: #2c3138;
+    border: 7px solid #1d2229;
+
+    box-shadow:
+        inset 0 0 0 3px rgba(255,255,255,.04),
+        0 12px 25px rgba(0,0,0,.18);
+}
+
+.road.horizontal {
+    left: 0;
+    top: 535px;
+
+    width: 1800px;
+    height: 150px;
+}
+
+.road.vertical {
+    left: 830px;
+    top: 0;
+
+    width: 160px;
+    height: 1300px;
+}
+
+.road-line {
+    position: absolute;
+    background: #f3d45b;
+    opacity: .75;
+}
+
+.road.horizontal .road-line {
+    width: 100%;
+    height: 5px;
+    top: 72px;
+    left: 0;
+
+    background:
+        repeating-linear-gradient(
+            to right,
+            #f3d45b 0 45px,
+            transparent 45px 80px
+        );
+}
+
+.road.vertical .road-line {
+    height: 100%;
+    width: 5px;
+    left: 77px;
+    top: 0;
+
+    background:
+        repeating-linear-gradient(
+            to bottom,
+            #f3d45b 0 45px,
+            transparent 45px 80px
+        );
+}
+
+/* =========================================================
+   AREA
+========================================================= */
+
+.area {
+    position: absolute;
+
+    border-radius: 24px;
+
+    border: 5px solid rgba(0,0,0,.22);
+
+    box-shadow:
+        0 18px 35px rgba(0,0,0,.28),
+        inset 0 0 0 2px rgba(255,255,255,.08);
+
+    cursor: pointer;
+
+    transition:
+        transform .15s,
+        filter .15s;
+}
+
+.area:hover,
+.area.active {
+    filter: brightness(1.18);
+    transform: translateY(-5px);
+}
+
+.area-title {
+    position: absolute;
+
+    top: -45px;
+    left: 50%;
+
+    transform: translateX(-50%);
+
+    white-space: nowrap;
+
+    padding: 8px 14px;
+
+    border-radius: 20px;
+
+    background: rgba(8,11,16,.9);
+
+    border: 1px solid rgba(255,255,255,.1);
+
+    font-size: 14px;
+    font-weight: 900;
+
+    box-shadow: 0 8px 20px rgba(0,0,0,.3);
+}
+
+.area-icon {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%,-50%);
+
+    font-size: 60px;
+
+    filter: drop-shadow(0 10px 5px rgba(0,0,0,.35));
+}
+
+/* =========================================================
+   PLAZA
+========================================================= */
+
+.plaza {
+    left: 280px;
+    top: 250px;
+
+    width: 420px;
+    height: 250px;
+
+    background:
+        radial-gradient(circle at 30% 30%, #899f89, #536956);
+}
+
+.fountain {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: 95px;
+    height: 95px;
+
+    transform: translate(-50%,-50%);
+
+    border-radius: 50%;
+
+    background:
+        radial-gradient(circle,#69c8e8 0 40%,#2f87a5 41% 70%,#45664e 71%);
+
+    border: 8px solid #d1d2c7;
+
+    box-shadow:
+        0 12px 15px rgba(0,0,0,.25);
+}
+
+/* =========================================================
+   BENCHES
+========================================================= */
+
+.bench {
+    position: absolute;
+
+    width: 80px;
+    height: 25px;
+
+    background: #8b542e;
+    border-radius: 6px;
+
+    box-shadow:
+        0 9px 0 #56331f,
+        0 13px 10px rgba(0,0,0,.25);
+
+    cursor: pointer;
+}
+
+.bench:nth-child(2) {
+    left: 45px;
+    top: 75px;
+}
+
+.bench:nth-child(3) {
+    right: 45px;
+    top: 75px;
+}
+
+.bench:nth-child(4) {
+    left: 45px;
+    bottom: 55px;
+}
+
+.bench:nth-child(5) {
+    right: 45px;
+    bottom: 55px;
+}
+
+/* =========================================================
+   SKATE PARK
+========================================================= */
+
+.skatepark {
+    left: 1020px;
+    top: 245px;
+
+    width: 430px;
+    height: 300px;
+
+    background:
+        radial-gradient(circle at center,#78848d,#56616b);
+}
+
+.ramp {
+    position: absolute;
+
+    bottom: 45px;
+
+    width: 130px;
+    height: 75px;
+
+    background: #9ba6ad;
+
+    border-radius: 80px 80px 8px 8px;
+
+    box-shadow:
+        inset 0 -10px 0 rgba(0,0,0,.18);
+}
+
+.ramp.left {
+    left: 45px;
+}
+
+.ramp.right {
+    right: 45px;
+}
+
+.rail {
+    position: absolute;
+
+    width: 170px;
+    height: 8px;
+
+    left: 50%;
+    top: 90px;
+
+    transform: translateX(-50%) rotate(-7deg);
+
+    background: #e2e6e8;
+
+    border-radius: 5px;
+}
+
+/* =========================================================
+   VESTIÁRIO
+========================================================= */
+
+.vest {
+    left: 550px;
+    top: 55px;
+
+    width: 300px;
+    height: 170px;
+
+    background:
+        linear-gradient(135deg,#8c4b37,#5d3028);
+}
+
+.vest .area-icon {
+    font-size: 55px;
+}
+
+/* =========================================================
+   EVENTS
+========================================================= */
+
+.events {
+    left: 330px;
+    top: 750px;
+
+    width: 580px;
+    height: 210px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #553b78,
+            #32234d
+        );
+}
+
+.event-icons {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%,-50%);
+
+    display: flex;
+    gap: 25px;
+
+    font-size: 45px;
+}
+
+/* =========================================================
+   SHOPS
+========================================================= */
+
+.shop {
+    width: 190px;
+    height: 150px;
+
+    border-radius: 18px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 55px;
+}
+
+.bakery {
+    left: 1030px;
+    top: 720px;
+
+    background: #b16e43;
+}
+
+.market {
+    left: 1250px;
+    top: 720px;
+
+    background: #42756c;
+}
+
+.workshop {
+    left: 1030px;
+    top: 900px;
+
+    background: #526577;
+}
+
+.snack {
+    left: 1250px;
+    top: 900px;
+
+    background: #8a4c43;
+}
+
+/* =========================================================
+   PORTAL
+========================================================= */
+
+.portal {
+    left: 690px;
+    top: 1020px;
+
+    width: 430px;
+    height: 190px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #37475d,
+            #1d293b
+        );
+}
+
+.portal-gate {
+    position: absolute;
+
+    left: 50%;
+    bottom: 20px;
+
+    width: 130px;
+    height: 100px;
+
+    transform: translateX(-50%);
+
+    border-radius: 70px 70px 0 0;
+
+    background: #101722;
+
+    border: 8px solid #72839b;
+}
+
+/* =========================================================
+   BRIDGE
+========================================================= */
+
+.bridge {
+    position: absolute;
+
+    left: 1480px;
+    top: 535px;
+
+    width: 320px;
+    height: 150px;
+
+    background:
+        repeating-linear-gradient(
+            45deg,
+            #72502e 0 25px,
+            #5c4027 25px 50px
+        );
+
+    border: 8px solid #392719;
+
+    box-shadow: 0 15px 30px rgba(0,0,0,.35);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 45px;
+}
+
+.bridge-label {
+    position: absolute;
+
+    top: -45px;
+
+    background: rgba(5,8,12,.9);
+
+    padding: 8px 14px;
+
+    border-radius: 20px;
+
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* =========================================================
+   THRND
+========================================================= */
+
+.thrnd {
+    position: absolute;
+
+    left: 55px;
+    top: 780px;
+
+    width: 220px;
+    height: 160px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f3bd32,
+            #d65b25
+        );
+
+    border-radius: 22px;
+
+    display: grid;
+    place-items: center;
+
+    font-size: 50px;
+
+    border: 5px solid rgba(0,0,0,.2);
+
+    box-shadow: 0 18px 35px rgba(0,0,0,.3);
+}
+
+/* =========================================================
+   CHARACTER
+========================================================= */
+
+#player {
+    position: absolute;
+
+    width: 52px;
+    height: 78px;
+
+    z-index: 500;
+
+    pointer-events: none;
+
+    transform: translate(-50%,-50%);
+}
+
+.player-shadow {
+    position: absolute;
+
+    width: 50px;
+    height: 17px;
+
+    left: 1px;
+    bottom: 0;
+
+    border-radius: 50%;
+
+    background: rgba(0,0,0,.35);
+
+    filter: blur(2px);
+}
+
+.player-body {
+    position: absolute;
+
+    left: 10px;
+    top: 20px;
+
+    width: 32px;
+    height: 45px;
+
+    border-radius: 15px 15px 9px 9px;
+
+    background:
+        linear-gradient(
+            135deg,
+            #ff4e4e,
+            #a51e39
+        );
+
+    border: 3px solid #171b22;
+}
+
+.player-head {
+    position: absolute;
+
+    left: 13px;
+    top: 0;
+
+    width: 27px;
+    height: 27px;
+
+    border-radius: 50%;
+
+    background: #d99262;
+
+    border: 3px solid #171b22;
+}
+
+.player-hat {
+    position: absolute;
+
+    left: 10px;
+    top: -2px;
+
+    width: 33px;
+    height: 10px;
+
+    border-radius: 10px 10px 3px 3px;
+
+    background: #222;
+
+    z-index: 2;
+}
+
+.skateboard {
+    position: absolute;
+
+    left: 1px;
+    bottom: 3px;
+
+    width: 50px;
+    height: 7px;
+
+    border-radius: 10px;
+
+    background: #f0b72f;
+
+    transform: rotate(-4deg);
+}
+
+.skateboard::before,
+.skateboard::after {
+    content: "";
+
+    position: absolute;
+
+    width: 7px;
+    height: 7px;
+
+    border-radius: 50%;
+
+    background: #111;
+
+    bottom: -7px;
+}
+
+.skateboard::before {
+    left: 7px;
+}
+
+.skateboard::after {
+    right: 7px;
+}
+
+/* =========================================================
+   INTERACTION MESSAGE
+========================================================= */
+
+#interaction {
+    position: absolute;
+
+    z-index: 1200;
+
+    left: 50%;
+    bottom: 125px;
+
+    transform: translateX(-50%) translateY(20px);
+
+    width: min(90%, 440px);
+
+    padding: 15px 18px;
+
+    background: rgba(8,11,16,.94);
+
+    border: 1px solid rgba(255,255,255,.12);
+
+    border-radius: 16px;
+
+    box-shadow: 0 20px 50px rgba(0,0,0,.4);
+
+    opacity: 0;
+
+    pointer-events: none;
+
+    transition: .2s;
+}
+
+#interaction.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+#interaction h3 {
+    font-size: 16px;
+    margin-bottom: 6px;
+}
+
+#interaction p {
+    color: #aeb8c8;
+    font-size: 13px;
+    line-height: 1.4;
+}
+
+/* =========================================================
+   JOYSTICK
+========================================================= */
+
+#joystick {
+    position: absolute;
+
+    z-index: 1300;
+
+    left: 22px;
+    bottom: 25px;
+
+    width: 145px;
+    height: 145px;
+
+    border-radius: 50%;
+
+    background: rgba(8,12,18,.5);
+
+    border: 2px solid rgba(255,255,255,.14);
+
+    backdrop-filter: blur(7px);
+
+    box-shadow: 0 15px 35px rgba(0,0,0,.35);
+}
+
+#joystick-knob {
+    position: absolute;
+
+    left: 50%;
+    top: 50%;
+
+    width: 60px;
+    height: 60px;
+
+    transform: translate(-50%,-50%);
+
+    border-radius: 50%;
+
+    background:
+        linear-gradient(
+            135deg,
+            #f5c83c,
+            #f37b35
+        );
+
+    border: 4px solid rgba(255,255,255,.7);
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.35);
+}
+
+.j-dir {
+    position: absolute;
+
+    color: rgba(255,255,255,.35);
+
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.j-up {
+    top: 10px;
+    left: 63px;
+}
+
+.j-down {
+    bottom: 10px;
+    left: 63px;
+}
+
+.j-left {
+    left: 10px;
+    top: 62px;
+}
+
+.j-right {
+    right: 10px;
+    top: 62px;
+}
+
+/* =========================================================
+   ACTION BUTTONS
+========================================================= */
+
+.actions {
+    position: absolute;
+
+    z-index: 1300;
+
+    right: 20px;
+    bottom: 30px;
+
+    width: 150px;
+    height: 150px;
+}
+
+.action {
+    position: absolute;
+
+    width: 58px;
+    height: 58px;
+
+    border-radius: 50%;
+
+    border: 3px solid rgba(255,255,255,.6);
+
+    color: white;
+
+    font-size: 18px;
+    font-weight: 900;
+
+    box-shadow:
+        0 8px 20px rgba(0,0,0,.35);
+
+    cursor: pointer;
+}
+
+.action:active {
+    transform: scale(.9);
+}
+
+.action-a {
+    right: 0;
+    top: 46px;
+
+    background: #e14d45;
+}
+
+.action-b {
+    right: 48px;
+    top: 0;
+
+    background: #377dd0;
+}
+
+.action-x {
+    right: 48px;
+    bottom: 0;
+
+    background: #48a96a;
+}
+
+.action-y {
+    left: 0;
+    top: 46px;
+
+    background: #b05ed5;
+}
+
+/* =========================================================
+   MINIMAP
+========================================================= */
+
+.minimap {
+    position: absolute;
+
+    z-index: 1100;
+
+    right: 14px;
+    top: 78px;
+
+    width: 150px;
+    height: 105px;
+
+    border-radius: 12px;
+
+    overflow: hidden;
+
+    background: #344139;
+
+    border: 2px solid rgba(255,255,255,.12);
+
+    box-shadow: 0 10px 25px rgba(0,0,0,.3);
+}
+
+.mini-road {
+    position: absolute;
+
+    background: #252b30;
+}
+
+.mini-road.h {
+    left: 0;
+    top: 45px;
+    width: 100%;
+    height: 20px;
+}
+
+.mini-road.v {
+    left: 70px;
+    top: 0;
+    width: 20px;
+    height: 100%;
+}
+
+.mini-player {
+    position: absolute;
+
+    width: 8px;
+    height: 8px;
+
+    border-radius: 50%;
+
+    background: #ffdd3c;
+
+    left: 72px;
+    top: 50px;
+
+    box-shadow: 0 0 10px #ffdd3c;
+}
+
+/* =========================================================
+   BOTTOM INFO
+========================================================= */
+
+.location-name {
+    position: absolute;
+
+    z-index: 1000;
+
+    left: 50%;
+    bottom: 28px;
+
+    transform: translateX(-50%);
+
+    padding: 8px 14px;
+
+    border-radius: 20px;
+
+    background: rgba(8,11,16,.75);
+
+    color: #cbd4df;
+
+    font-size: 12px;
+
+    pointer-events: none;
+}
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+.modal {
+    position: fixed;
+
+    z-index: 3000;
+
+    inset: 0;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0,0,0,.72);
+
+    padding: 20px;
+}
+
+.modal.open {
+    display: flex;
+}
+
+.modal-box {
+    width: min(92vw, 500px);
+
+    background: #151b25;
+
+    border: 1px solid rgba(255,255,255,.1);
+
+    border-radius: 20px;
+
+    padding: 22px;
+
+    box-shadow: 0 30px 80px rgba(0,0,0,.55);
+}
+
+.modal-box h2 {
+    margin-bottom: 12px;
+}
+
+.modal-box p {
+    color: #aeb8c8;
+
+    font-size: 14px;
+    line-height: 1.5;
+
+    margin-bottom: 18px;
+}
+
+.close-modal {
+    float: right;
+
+    border: 0;
+
+    width: 35px;
+    height: 35px;
+
+    border-radius: 50%;
+
+    background: #252e3d;
+
+    color: white;
+
+    cursor: pointer;
+}
+
+.modal-options {
+    display: grid;
+    grid-template-columns: repeat(2,1fr);
+    gap: 10px;
+}
+
+.modal-option {
+    padding: 15px;
+
+    border: 0;
+
+    border-radius: 12px;
+
+    background: #202a38;
+
+    color: white;
+
+    font-weight: bold;
+
+    cursor: pointer;
+}
+
+.modal-option:hover {
+    background: #2b3748;
+}
+
+/* =========================================================
+   MOBILE
+========================================================= */
+
+@media(max-width:700px) {
+
+    .topbar {
+        height: 58px;
+    }
+
+    #viewport {
+        top: 58px;
+    }
+
+    .top-btn {
+        padding: 8px;
+
+        font-size: 0;
+
+        width: 38px;
+        height: 38px;
+    }
+
+    .top-btn::first-letter {
+        font-size: 17px;
+    }
+
+    .logo span {
+        display: none;
+    }
+
+    .hud {
+        top: 68px;
+    }
+
+    .hud-card {
+        font-size: 10px;
+        padding: 6px 8px;
+    }
+
+    .minimap {
+        top: 70px;
+        right: 10px;
+
+        width: 110px;
+        height: 78px;
+    }
+
+    #world {
+        transform:
+            translate(-50%, -50%)
+            scale(.52);
+    }
+
+    .area-title {
+        font-size: 12px;
+    }
+
+    #interaction {
+        bottom: 185px;
+    }
+}
+
+/* =========================================================
+   DESKTOP
+========================================================= */
+
+@media(min-width:900px) {
+
+    #joystick,
+    .actions {
+        opacity: .9;
+    }
+
+    #joystick:hover,
+    .actions:hover {
+        opacity: 1;
+    }
+}
+
+</style>
+</head>
+
+<body>
+
+<div id="app">
+
+    <!-- =====================================================
+         TOP BAR
+    ====================================================== -->
+
+    <header class="topbar">
+
+        <div class="logo">
+            <div class="logo-icon">🛹</div>
+            <span>SK8 WORLD</span>
+        </div>
+
+        <nav class="top-actions">
+
+            <button class="top-btn" onclick="openModal('Mapa')">
+                🗺️ MAPA
+            </button>
+
+            <button class="top-btn" onclick="openModal('Perfil')">
+                👤 PERFIL
+            </button>
+
+            <button class="top-btn" onclick="openModal('Ranking')">
+                🏆 RANKING
+            </button>
+
+            <button class="top-btn" onclick="openModal('Eventos')">
+                🎪 EVENTOS
+            </button>
+
+            <button class="top-btn" onclick="openModal('Configurações')">
+                ⚙️
+            </button>
+
+        </nav>
+
+    </header>
+
+
+    <!-- =====================================================
+         HUD
+    ====================================================== -->
+
+    <div class="hud">
+
+        <div class="hud-card">
+            👤 <strong>Skater</strong>
+        </div>
+
+        <div class="hud-card">
+            ⭐ <strong id="score">0</strong>
+        </div>
+
+        <div class="hud-card">
+            ₿ <strong id="satoshi">120</strong> sats
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MINIMAP
+    ====================================================== -->
+
+    <div class="minimap">
+
+        <div class="mini-road h"></div>
+        <div class="mini-road v"></div>
+
+        <div class="mini-player" id="miniPlayer"></div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MAP
+    ====================================================== -->
+
+    <main id="viewport">
+
+        <div id="world">
+
+            <div class="ground"></div>
+
+
+            <!-- AVENIDA -->
+
+            <div class="road horizontal">
+                <div class="road-line"></div>
+            </div>
+
+            <div class="road vertical">
+                <div class="road-line"></div>
+            </div>
+
+
+            <!-- PRAÇA SK8 -->
+
+            <section
+                class="area plaza"
+                data-name="Praça SK8"
+                onclick="interact('Praça SK8')"
+            >
+
+                <div class="area-title">
+                    🛹 PRAÇA SK8
+                </div>
+
+                <div class="fountain"></div>
+
+                <div
+                    class="bench"
+                    onclick="event.stopPropagation(); openGameMenu()"
+                ></div>
+
+                <div
+                    class="bench"
+                    onclick="event.stopPropagation(); openGameMenu()"
+                ></div>
+
+                <div
+                    class="bench"
+                    onclick="event.stopPropagation(); openGameMenu()"
+                ></div>
+
+                <div
+                    class="bench"
+                    onclick="event.stopPropagation(); openGameMenu()"
+                ></div>
+
+            </section>
+
+
+            <!-- VESTIÁRIO -->
+
+            <section
+                class="area vest"
+                onclick="openCustomizer()"
+            >
+
+                <div class="area-title">
+                    👕 VESTIÁRIO
+                </div>
+
+                <div class="area-icon">
+                    👕
+                </div>
+
+            </section>
+
+
+            <!-- PISTA -->
+
+            <section
+                class="area skatepark"
+                onclick="interact('Pista de Skate')"
+            >
+
+                <div class="area-title">
+                    🛹 PISTA DE SK8
+                </div>
+
+                <div class="ramp left"></div>
+                <div class="ramp right"></div>
+
+                <div class="rail"></div>
+
+                <div class="area-icon">
+                    🛹
+                </div>
+
+            </section>
+
+
+            <!-- EVENTOS -->
+
+            <section
+                class="area events"
+                onclick="openEvents()"
+            >
+
+                <div class="area-title">
+                    🎪 ÁREA DE EVENTOS
+                </div>
+
+                <div class="event-icons">
+                    🏆 🛹 🏃
+                </div>
+
+            </section>
+
+
+            <!-- THRND -->
+
+            <section
+                class="thrnd"
+                onclick="openThrnd()"
+            >
+
+                <div>
+                    ₿
+                </div>
+
+            </section>
+
+
+            <!-- COMÉRCIO -->
+
+            <section
+                class="area shop bakery"
+                onclick="openBusiness('Padaria')"
+            >
+
+                <div class="area-title">
+                    🥖 PADARIA
+                </div>
+
+                🥖
+
+            </section>
+
+
+            <section
+                class="area shop market"
+                onclick="openBusiness('Mercado')"
+            >
+
+                <div class="area-title">
+                    🛒 MERCADO
+                </div>
+
+                🛒
+
+            </section>
+
+
+            <section
+                class="area shop workshop"
+                onclick="openBusiness('Oficina')"
+            >
+
+                <div class="area-title">
+                    🔧 OFICINA
+                </div>
+
+                🔧
+
+            </section>
+
+
+            <section
+                class="area shop snack"
+                onclick="openBusiness('Lanchonete')"
+            >
+
+                <div class="area-title">
+                    🍔 LANCHONETE
+                </div>
+
+                🍔
+
+            </section>
+
+
+            <!-- PORTAL -->
+
+            <section
+                class="area portal"
+                onclick="openPortal()"
+            >
+
+                <div class="area-title">
+                    🏢 PORTAL
+                </div>
+
+                <div class="portal-gate"></div>
+
+                <div
+                    style="
+                    position:absolute;
+                    bottom:28px;
+                    left:50%;
+                    transform:translateX(-50%);
+                    white-space:nowrap;
+                    font-size:12px;
+                    "
+                >
+                    SEDE • RECEPÇÃO • SAC • B.A.BYTE
+                </div>
+
+            </section>
+
+
+            <!-- PONTE -->
+
+            <section
+                class="bridge"
+                onclick="nextMap()"
+            >
+
+                <div class="bridge-label">
+                    🌉 ACESSO AO OUTRO MAPA
+                </div>
+
+                🌉
+
+            </section>
+
+
+            <!-- PLAYER -->
+
+            <div id="player">
+
+                <div class="player-shadow"></div>
+
+                <div class="player-head"></div>
+
+                <div class="player-hat"></div>
+
+                <div class="player-body"></div>
+
+                <div class="skateboard"></div>
+
+            </div>
+
+        </div>
+
+    </main>
+
+
+    <!-- =====================================================
+         INTERACTION
+    ====================================================== -->
+
+    <div id="interaction">
+
+        <h3 id="interactionTitle">
+            Interação
+        </h3>
+
+        <p id="interactionText">
+            Explore o mapa.
+        </p>
+
+    </div>
+
+
+    <!-- =====================================================
+         LOCATION
+    ====================================================== -->
+
+    <div class="location-name" id="locationName">
+        Praça SK8
+    </div>
+
+
+    <!-- =====================================================
+         JOYSTICK
+    ====================================================== -->
+
+    <div id="joystick">
+
+        <span class="j-dir j-up">▲</span>
+        <span class="j-dir j-down">▼</span>
+        <span class="j-dir j-left">◀</span>
+        <span class="j-dir j-right">▶</span>
+
+        <div id="joystick-knob"></div>
+
+    </div>
+
+
+    <!-- =====================================================
+         ACTION BUTTONS
+    ====================================================== -->
+
+    <div class="actions">
+
+        <button
+            class="action action-a"
+            onclick="actionButton('A')"
+        >
+            A
+        </button>
+
+        <button
+            class="action action-b"
+            onclick="actionButton('B')"
+        >
+            B
+        </button>
+
+        <button
+            class="action action-x"
+            onclick="actionButton('X')"
+        >
+            X
+        </button>
+
+        <button
+            class="action action-y"
+            onclick="actionButton('Y')"
+        >
+            Y
+        </button>
+
+    </div>
+
+
+    <!-- =====================================================
+         MODAL
+    ====================================================== -->
+
+    <div
+        class="modal"
+        id="modal"
+        onclick="closeModalOutside(event)"
+    >
+
+        <div class="modal-box">
+
+            <button
+                class="close-modal"
+                onclick="closeModal()"
+            >
+                ×
+            </button>
+
+            <h2 id="modalTitle">
+                Menu
+            </h2>
+
+            <p id="modalText">
+                Conteúdo.
+            </p>
+
+            <div
+                class="modal-options"
+                id="modalOptions"
+            ></div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   PLAYER
+========================================================= */
+
+const player = document.getElementById("player");
+const world = document.getElementById("world");
+
+let playerX = 900;
+let playerY = 650;
+
+let speed = 4;
+
+let velocityX = 0;
+let velocityY = 0;
+
+let score = 0;
+let satoshi = 120;
+
+
+/* =========================================================
+   UPDATE PLAYER
+========================================================= */
+
+function updatePlayer() {
+
+    playerX += velocityX;
+    playerY += velocityY;
+
+    /*
+     * limites do mapa
+     */
+
+    playerX = Math.max(30, Math.min(1770, playerX));
+    playerY = Math.max(30, Math.min(1270, playerY));
+
+    player.style.left = playerX + "px";
+    player.style.top = playerY + "px";
+
+    /*
+     * minimapa
+     */
+
+    const miniX = (playerX / 1800) * 150;
+    const miniY = (playerY / 1300) * 105;
+
+    document.getElementById("miniPlayer").style.left =
+        miniX + "px";
+
+    document.getElementById("miniPlayer").style.top =
+        miniY + "px";
+
+    /*
+     * câmera
+     */
+
+    const viewport = document.getElementById("viewport");
+
+    const vw = viewport.clientWidth;
+    const vh = viewport.clientHeight;
+
+    const scale =
+        window.innerWidth < 700
+            ? .52
+            : .72;
+
+    const cameraX =
+        vw / 2 - playerX * scale;
+
+    const cameraY =
+        vh / 2 - playerY * scale;
+
+    world.style.transform =
+        `translate(${cameraX / scale}px,
+        ${cameraY / scale}px)
+        scale(${scale})`;
+
+    requestAnimationFrame(updatePlayer);
+}
+
+updatePlayer();
+
+
+/* =========================================================
+   KEYBOARD
+========================================================= */
+
+const keys = {};
+
+window.addEventListener("keydown", e => {
+
+    keys[e.key.toLowerCase()] = true;
+
+    updateKeyboard();
+
+});
+
+window.addEventListener("keyup", e => {
+
+    keys[e.key.toLowerCase()] = false;
+
+    updateKeyboard();
+
+});
+
+
+function updateKeyboard() {
+
+    velocityX = 0;
+    velocityY = 0;
+
+    if (
+        keys["arrowleft"] ||
+        keys["a"]
+    ) {
+        velocityX = -speed;
+    }
+
+    if (
+        keys["arrowright"] ||
+        keys["d"]
+    ) {
+        velocityX = speed;
+    }
+
+    if (
+        keys["arrowup"] ||
+        keys["w"]
+    ) {
+        velocityY = -speed;
+    }
+
+    if (
+        keys["arrowdown"] ||
+        keys["s"]
+    ) {
+        velocityY = speed;
+    }
+
+}
+
+
+/* =========================================================
+   JOYSTICK
+========================================================= */
+
+const joystick =
+    document.getElementById("joystick");
+
+const knob =
+    document.getElementById("joystick-knob");
+
+let joystickActive = false;
+
+let joystickCenter = {
+    x: 0,
+    y: 0
+};
+
+
+joystick.addEventListener(
+    "pointerdown",
+    e => {
+
+        joystickActive = true;
+
+        joystick.setPointerCapture(e.pointerId);
+
+        const rect =
+            joystick.getBoundingClientRect();
+
+        joystickCenter.x =
+            rect.left + rect.width / 2;
+
+        joystickCenter.y =
+            rect.top + rect.height / 2;
+
+        updateJoystick(e);
+
+    }
+);
+
+
+joystick.addEventListener(
+    "pointermove",
+    e => {
+
+        if (!joystickActive) return;
+
+        updateJoystick(e);
+
+    }
+);
+
+
+joystick.addEventListener(
+    "pointerup",
+    resetJoystick
+);
+
+
+joystick.addEventListener(
+    "pointercancel",
+    resetJoystick
+);
+
+
+function updateJoystick(e) {
+
+    let dx =
+        e.clientX - joystickCenter.x;
+
+    let dy =
+        e.clientY - joystickCenter.y;
+
+    const max = 42;
+
+    const distance =
+        Math.sqrt(dx * dx + dy * dy);
+
+    if (distance > max) {
+
+        dx =
+            dx / distance * max;
+
+        dy =
+            dy / distance * max;
+
+    }
+
+    knob.style.transform =
+        `translate(
+            calc(-50% + ${dx}px),
+            calc(-50% + ${dy}px)
+        )`;
+
+    velocityX =
+        (dx / max) * speed;
+
+    velocityY =
+        (dy / max) * speed;
+
+}
+
+
+function resetJoystick() {
+
+    joystickActive = false;
+
+    knob.style.transform =
+        "translate(-50%,-50%)";
+
+    velocityX = 0;
+    velocityY = 0;
+
+}
+
+
+/* =========================================================
+   INTERACTION
+========================================================= */
+
+function interact(name) {
+
+    showInteraction(
+        name,
+        getAreaDescription(name)
+    );
+
+}
+
+
+function getAreaDescription(name) {
+
+    const descriptions = {
+
+        "Praça SK8":
+            "Sente em um banco para jogar Jogo da Velha, JokenPo, Truco, UNO, Dama ou Dominó com seus amigos.",
+
+        "Pista de Skate":
+            "Pratique manobras, entre no ranking ou aceite um desafio.",
+
+        "Padaria":
+            "Comerciante local. Futuramente poderá oferecer recompensas em satoshis.",
+
+        "Mercado":
+            "Comerciante local. Confira ofertas e recompensas.",
+
+        "Oficina":
+            "Personalize e faça manutenção do seu skate.",
+
+        "Lanchonete":
+            "Compre produtos e participe de campanhas de recompensa.",
+
+        "Portal":
+            "Acesso à Sede Administrativa, Recepção, SAC e B.A.Byte."
+
+    };
+
+    return descriptions[name] ||
+        "Explore este ponto do mapa.";
+
+}
+
+
+function showInteraction(title,text) {
+
+    const box =
+        document.getElementById("interaction");
+
+    document.getElementById(
+        "interactionTitle"
+    ).textContent = title;
+
+    document.getElementById(
+        "interactionText"
+    ).textContent = text;
+
+    box.classList.add("show");
+
+    clearTimeout(window.interactionTimer);
+
+    window.interactionTimer =
+        setTimeout(() => {
+
+            box.classList.remove("show");
+
+        },5000);
+
+}
+
+
+/* =========================================================
+   MODAL
+========================================================= */
+
+function openModal(title) {
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent = title;
+
+    document.getElementById(
+        "modalText"
+    ).textContent =
+        "Esta área faz parte do ambiente digital SK8 World.";
+
+    document.getElementById(
+        "modalOptions"
+    ).innerHTML = "";
+
+    document.getElementById(
+        "modal"
+    ).classList.add("open");
+
+}
+
+
+function closeModal() {
+
+    document.getElementById(
+        "modal"
+    ).classList.remove("open");
+
+}
+
+
+function closeModalOutside(e) {
+
+    if (e.target.id === "modal") {
+
+        closeModal();
+
+    }
+
+}
+
+
+/* =========================================================
+   JOGOS
+========================================================= */
+
+function openGameMenu() {
+
+    const modal =
+        document.getElementById("modal");
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent =
+        "🎮 Jogos da Praça";
+
+    document.getElementById(
+        "modalText"
+    ).textContent =
+        "Escolha um jogo para jogar com seus amigos.";
+
+    const options = [
+        "❌ Jogo da Velha",
+        "✊ JokenPo",
+        "🃏 Truco",
+        "🃏 UNO",
+        "♟️ Dama",
+        "⚫ Dominó",
+        "💬 Chat"
+    ];
+
+    document.getElementById(
+        "modalOptions"
+    ).innerHTML =
+        options.map(
+            game =>
+                `<button
+                    class="modal-option"
+                    onclick="startGame('${game}')"
+                >
+                    ${game}
+                </button>`
+        ).join("");
+
+    modal.classList.add("open");
+
+}
+
+
+function startGame(game) {
+
+    closeModal();
+
+    showInteraction(
+        game,
+        "Modo de jogo selecionado. A sala multiplayer será carregada aqui."
+    );
+
+}
+
+
+/* =========================================================
+   PERSONALIZAÇÃO
+========================================================= */
+
+function openCustomizer() {
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent =
+        "👕 Personalize seu personagem";
+
+    document.getElementById(
+        "modalText"
+    ).textContent =
+        "Escolha um estilo para o seu personagem.";
+
+    document.getElementById(
+        "modalOptions"
+    ).innerHTML = `
+
+        <button
+            class="modal-option"
+            onclick="changeCharacter('#ff4e4e')"
+        >
+            🔴 Vermelho
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="changeCharacter('#3678e8')"
+        >
+            🔵 Azul
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="changeCharacter('#45aa69')"
+        >
+            🟢 Verde
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="changeCharacter('#a452d4')"
+        >
+            🟣 Roxo
+        </button>
+
+    `;
+
+    document.getElementById(
+        "modal"
+    ).classList.add("open");
+
+}
+
+
+function changeCharacter(color) {
+
+    document.querySelector(
+        ".player-body"
+    ).style.background =
+        `linear-gradient(
+            135deg,
+            ${color},
+            #151b25
+        )`;
+
+    closeModal();
+
+    showInteraction(
+        "Personagem atualizado",
+        "Seu novo visual foi aplicado."
+    );
+
+}
+
+
+/* =========================================================
+   EVENTOS
+========================================================= */
+
+function openEvents() {
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent =
+        "🎪 Área de Eventos";
+
+    document.getElementById(
+        "modalText"
+    ).textContent =
+        "Participe dos eventos do SK8 World.";
+
+    document.getElementById(
+        "modalOptions"
+    ).innerHTML = `
+
+        <button
+            class="modal-option"
+            onclick="eventAction('Campeonato de SK8')"
+        >
+            🏆 Campeonato
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="eventAction('Corrida com Obstáculos')"
+        >
+            🏃 Corrida
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="eventAction('Coleta de Ativos')"
+        >
+            💰 Coleta
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="eventAction('Recrutamento')"
+        >
+            👥 Recrutamento
+        </button>
+
+    `;
+
+    document.getElementById(
+        "modal"
+    ).classList.add("open");
+
+}
+
+
+function eventAction(name) {
+
+    closeModal();
+
+    showInteraction(
+        name,
+        "Evento selecionado. Sistema de participação será conectado ao backend."
+    );
+
+}
+
+
+/* =========================================================
+   THRND
+========================================================= */
+
+function openThrnd() {
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent =
+        "₿ Thrnd";
+
+    document.getElementById(
+        "modalText"
+    ).textContent =
+        "Entre nos jogos Thrnd, complete desafios e ganhe satoshis.";
+
+    document.getElementById(
+        "modalOptions"
+    ).innerHTML = `
+
+        <button
+            class="modal-option"
+            onclick="thrndAction('Jogos')"
+        >
+            🎮 Jogos Thrnd
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="thrndAction('Desafios')"
+        >
+            🏆 Desafios
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="thrndAction('Carteira')"
+        >
+            ₿ Carteira
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="thrndAction('Ranking')"
+        >
+            📊 Ranking
+        </button>
+
+    `;
+
+    document.getElementById(
+        "modal"
+    ).classList.add("open");
+
+}
+
+
+function thrndAction(name) {
+
+    closeModal();
+
+    if (name === "Jogos") {
+
+        satoshi += 5;
+
+        updateSatoshi();
+
+        showInteraction(
+            "Thrnd",
+            "Você encontrou uma recompensa de demonstração: +5 sats."
+        );
+
+    } else {
+
+        showInteraction(
+            "Thrnd",
+            `${name}: módulo preparado para integração.`
+        );
+
+    }
+
+}
+
+
+function updateSatoshi() {
+
+    document.getElementById(
+        "satoshi"
+    ).textContent = satoshi;
+
+}
+
+
+/* =========================================================
+   COMÉRCIO / ADS
+========================================================= */
+
+function openBusiness(name) {
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent =
+        "🏪 " + name;
+
+    document.getElementById(
+        "modalText"
+    ).textContent =
+        "Este comerciante poderá cadastrar campanhas e recompensas em satoshis para os usuários.";
+
+    document.getElementById(
+        "modalOptions"
+    ).innerHTML = `
+
+        <button
+            class="modal-option"
+            onclick="businessAction('Oferta')"
+        >
+            🏷️ Ver ofertas
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="businessAction('Recompensa')"
+        >
+            ₿ Recompensas
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="businessAction('Visitar')"
+        >
+            📍 Visitar
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="businessAction('Ads')"
+        >
+            📢 Campanhas Ads
+        </button>
+
+    `;
+
+    document.getElementById(
+        "modal"
+    ).classList.add("open");
+
+}
+
+
+function businessAction(name) {
+
+    closeModal();
+
+    showInteraction(
+        "Comerciante",
+        `${name}: funcionalidade preparada para integração.`
+    );
+
+}
+
+
+/* =========================================================
+   PORTAL
+========================================================= */
+
+function openPortal() {
+
+    document.getElementById(
+        "modalTitle"
+    ).textContent =
+        "🏢 Portal";
+
+    document.getElementById(
+        "modalText"
+    ).textContent =
+        "Bem-vindo ao centro administrativo do ambiente.";
+
+    document.getElementById(
+        "modalOptions"
+    ).innerHTML = `
+
+        <button
+            class="modal-option"
+            onclick="portalAction('Sede Administrativa')"
+        >
+            🏢 Sede
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="portalAction('Recepção')"
+        >
+            🛎️ Recepção
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="portalAction('SAC')"
+        >
+            🎧 SAC
+        </button>
+
+        <button
+            class="modal-option"
+            onclick="portalAction('B.A.Byte')"
+        >
+            🤖 B.A.Byte
+        </button>
+
+    `;
+
+    document.getElementById(
+        "modal"
+    ).classList.add("open");
+
+}
+
+
+function portalAction(name) {
+
+    closeModal();
+
+    showInteraction(
+        name,
+        `Você entrou na área ${name}.`
+    );
+
+}
+
+
+/* =========================================================
+   PONTE / OUTRO MAPA
+========================================================= */
+
+function nextMap() {
+
+    showInteraction(
+        "🌉 Ponte",
+        "Acesso ao próximo mapa. Aqui poderá ser carregado um novo cenário."
+    );
+
+    /*
+     * Futuramente:
+     *
+     * window.location.href = "mapa-02.html";
+     *
+     * ou
+     *
+     * carregarMapa("mapa-02.json");
+     */
+
+}
+
+
+/* =========================================================
+   ACTION BUTTONS
+========================================================= */
+
+function actionButton(button) {
+
+    switch(button) {
+
+        case "A":
+
+            showInteraction(
+                "Ação A",
+                "Interagir com o ponto mais próximo."
+            );
+
+            break;
+
+        case "B":
+
+            score += 10;
+
+            document.getElementById(
+                "score"
+            ).textContent = score;
+
+            showInteraction(
+                "Ação B",
+                "+10 pontos!"
+            );
+
+            break;
+
+        case "X":
+
+            showInteraction(
+                "Skate",
+                "Você executou uma manobra!"
+            );
+
+            break;
+
+        case "Y":
+
+            openGameMenu();
+
+            break;
+
+    }
+
+}
+
+
+/* =========================================================
+   LOCALIZAÇÃO
+========================================================= */
+
+setInterval(() => {
+
+    let name = "Avenida";
+
+    if (
+        playerX > 280 &&
+        playerX < 700 &&
+        playerY > 250 &&
+        playerY < 500
+    ) {
+        name = "Praça SK8";
+    }
+
+    else if (
+        playerX > 1020 &&
+        playerX < 1450 &&
+        playerY > 245 &&
+        playerY < 545
+    ) {
+        name = "Pista de Skate";
+    }
+
+    else if (
+        playerX > 550 &&
+        playerX < 850 &&
+        playerY > 55 &&
+        playerY < 225
+    ) {
+        name = "Vestiário";
+    }
+
+    else if (
+        playerX > 330 &&
+        playerX < 910 &&
+        playerY > 750 &&
+        playerY < 960
+    ) {
+        name = "Área de Eventos";
+    }
+
+    else if (
+        playerX > 690 &&
+        playerX < 1120 &&
+        playerY > 1020
+    ) {
+        name = "Portal";
+    }
+
+    document.getElementById(
+        "locationName"
+    ).textContent = name;
+
+},300);
+
+
+/* =========================================================
+   RESIZE
+========================================================= */
+
+window.addEventListener(
+    "resize",
+    () => {}
+);
+
+</script>
+
+</body>
+</html>
