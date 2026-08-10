@@ -1,0 +1,2097 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>Street City Skate 2.5D</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:none;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#111;
+    font-family:Arial,sans-serif;
+}
+
+canvas{
+    position:fixed;
+    inset:0;
+    width:100%;
+    height:100%;
+}
+
+/* ================= HUD ================= */
+
+#hud{
+    position:fixed;
+    top:12px;
+    left:12px;
+    right:12px;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    color:#fff;
+    font-weight:bold;
+    font-size:15px;
+
+    text-shadow:0 2px 4px #000;
+
+    pointer-events:none;
+    z-index:20;
+}
+
+.hudBox{
+    background:rgba(0,0,0,.35);
+    border:1px solid rgba(255,255,255,.2);
+    padding:8px 12px;
+    border-radius:12px;
+    backdrop-filter:blur(5px);
+}
+
+/* ================= MENU ================= */
+
+#menu{
+    position:fixed;
+    inset:0;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    background:
+        linear-gradient(
+            rgba(0,0,0,.35),
+            rgba(0,0,0,.7)
+        );
+
+    color:white;
+    z-index:100;
+}
+
+#menu h1{
+    font-size:42px;
+    text-align:center;
+    letter-spacing:2px;
+
+    text-shadow:0 5px 15px #000;
+}
+
+#menu p{
+    margin-top:8px;
+    opacity:.8;
+}
+
+.menuButton{
+    margin-top:30px;
+
+    width:230px;
+    padding:16px;
+
+    border:0;
+    border-radius:15px;
+
+    background:#ff6333;
+    color:white;
+
+    font-size:18px;
+    font-weight:bold;
+
+    box-shadow:0 8px 20px rgba(0,0,0,.4);
+}
+
+.menuButton:active{
+    transform:scale(.95);
+}
+
+/* ================= JOYSTICK ================= */
+
+#joystick{
+    position:fixed;
+    left:22px;
+    bottom:25px;
+
+    width:135px;
+    height:135px;
+
+    border-radius:50%;
+
+    background:rgba(255,255,255,.13);
+    border:2px solid rgba(255,255,255,.25);
+
+    z-index:30;
+}
+
+#stick{
+    position:absolute;
+
+    width:64px;
+    height:64px;
+
+    left:33px;
+    top:33px;
+
+    border-radius:50%;
+
+    background:rgba(255,255,255,.65);
+
+    box-shadow:0 5px 15px #0006;
+}
+
+/* ================= BOTÕES ================= */
+
+#buttons{
+    position:fixed;
+    right:18px;
+    bottom:20px;
+
+    display:grid;
+    grid-template-columns:75px 75px;
+    gap:10px;
+
+    z-index:30;
+}
+
+.action{
+    width:75px;
+    height:75px;
+
+    border-radius:50%;
+
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+
+    background:rgba(15,15,20,.55);
+    border:2px solid rgba(255,255,255,.25);
+
+    color:#fff;
+    font-size:12px;
+    font-weight:bold;
+
+    box-shadow:0 5px 15px #0006;
+}
+
+.action span{
+    font-size:25px;
+}
+
+.action:active{
+    transform:scale(.9);
+    background:rgba(255,255,255,.3);
+}
+
+/* ================= COMBO ================= */
+
+#comboText{
+    position:fixed;
+    left:50%;
+    top:30%;
+
+    transform:translate(-50%,-50%) scale(.5);
+
+    color:#fff;
+    font-size:28px;
+    font-weight:bold;
+
+    text-align:center;
+
+    text-shadow:
+        0 3px 8px #000;
+
+    opacity:0;
+
+    pointer-events:none;
+
+    z-index:40;
+
+    transition:
+        transform .2s,
+        opacity .2s;
+}
+
+#comboText.show{
+    opacity:1;
+    transform:translate(-50%,-50%) scale(1);
+}
+
+/* ================= MAP ================= */
+
+#location{
+    position:fixed;
+    left:50%;
+    bottom:10px;
+
+    transform:translateX(-50%);
+
+    color:#fff;
+    font-size:12px;
+
+    padding:6px 12px;
+
+    border-radius:20px;
+
+    background:rgba(0,0,0,.4);
+
+    z-index:20;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<!-- MENU -->
+
+<div id="menu">
+
+    <h1>🛹 STREET<br>CITY</h1>
+
+    <p>2.5D Skate Exploration</p>
+
+    <button class="menuButton" id="start">
+        COMEÇAR
+    </button>
+
+</div>
+
+
+<!-- HUD -->
+
+<div id="hud">
+
+    <div class="hudBox">
+        ⭐ <span id="score">0</span>
+    </div>
+
+    <div class="hudBox">
+        🔥 x<span id="combo">1</span>
+    </div>
+
+    <div class="hudBox">
+        🪙 <span id="coins">0</span>
+    </div>
+
+    <div class="hudBox">
+        ⚡ <span id="speed">0</span>
+    </div>
+
+</div>
+
+
+<div id="comboText"></div>
+
+<div id="location">
+    Downtown
+</div>
+
+
+<!-- JOYSTICK -->
+
+<div id="joystick">
+    <div id="stick"></div>
+</div>
+
+
+<!-- AÇÕES -->
+
+<div id="buttons">
+
+    <div class="action" id="jump">
+        <span>⬆️</span>
+        PULO
+    </div>
+
+    <div class="action" id="flip">
+        <span>🔄</span>
+        FLIP
+    </div>
+
+    <div class="action" id="grind">
+        <span>🛹</span>
+        GRIND
+    </div>
+
+    <div class="action" id="boost">
+        <span>⚡</span>
+        BOOST
+    </div>
+
+</div>
+
+
+<script>
+
+/* =====================================================
+   CONFIGURAÇÃO
+===================================================== */
+
+const canvas =
+    document.getElementById("game");
+
+const ctx =
+    canvas.getContext("2d");
+
+let W;
+let H;
+
+function resize(){
+
+    W =
+        canvas.width =
+        innerWidth;
+
+    H =
+        canvas.height =
+        innerHeight;
+}
+
+resize();
+
+addEventListener("resize",resize);
+
+
+/* =====================================================
+   ESTADO
+===================================================== */
+
+let playing = false;
+
+let score =
+    Number(localStorage.getItem("skateScore") || 0);
+
+let collectedCoins =
+    Number(localStorage.getItem("skateCoins") || 0);
+
+let combo = 1;
+
+let camera = {
+    x:0,
+    y:0
+};
+
+let time = 0;
+
+
+/* =====================================================
+   MUNDO 2.5D
+===================================================== */
+
+/*
+    O mundo usa coordenadas:
+
+    X = esquerda/direita
+    Z = profundidade
+
+    Quanto maior Z:
+    mais distante do jogador.
+
+    A função project()
+    transforma o mundo em perspectiva.
+*/
+
+const WORLD = {
+
+    horizon:0.38,
+
+    roadWidth:700,
+
+    length:15000
+
+};
+
+
+function project(x,z,y=0){
+
+    const depth =
+        1 /
+        (1 + z * 0.0015);
+
+    const center =
+        W/2 +
+        (x-camera.x) *
+        depth;
+
+    const ground =
+        H*WORLD.horizon +
+        (H*.62) * depth;
+
+    return {
+
+        x:center,
+
+        y:ground-y*depth,
+
+        scale:depth
+
+    };
+}
+
+
+/* =====================================================
+   PLAYER
+===================================================== */
+
+const player = {
+
+    x:0,
+
+    z:150,
+
+    y:0,
+
+    vx:0,
+
+    vz:0,
+
+    vy:0,
+
+    rotation:0,
+
+    grounded:true,
+
+    flipping:false,
+
+    flipAngle:0,
+
+    grinding:false,
+
+    boost:false,
+
+    health:100
+
+};
+
+
+/* =====================================================
+   CONTROLES
+===================================================== */
+
+let joyX=0;
+let joyY=0;
+
+const joystick =
+    document.getElementById("joystick");
+
+const stick =
+    document.getElementById("stick");
+
+let joystickActive=false;
+
+
+function updateJoystick(x,y){
+
+    const r =
+        joystick.getBoundingClientRect();
+
+    const cx =
+        r.left+r.width/2;
+
+    const cy =
+        r.top+r.height/2;
+
+    let dx=x-cx;
+    let dy=y-cy;
+
+    const max=45;
+
+    const d =
+        Math.sqrt(dx*dx+dy*dy);
+
+    if(d>max){
+
+        dx=dx/d*max;
+        dy=dy/d*max;
+
+    }
+
+    joyX=dx/max;
+    joyY=dy/max;
+
+    stick.style.transform =
+        `translate(${dx}px,${dy}px)`;
+}
+
+
+joystick.addEventListener(
+    "touchstart",
+    e=>{
+
+        e.preventDefault();
+
+        joystickActive=true;
+
+        const t=e.touches[0];
+
+        updateJoystick(
+            t.clientX,
+            t.clientY
+        );
+
+    },
+    {passive:false}
+);
+
+
+joystick.addEventListener(
+    "touchmove",
+    e=>{
+
+        e.preventDefault();
+
+        if(!joystickActive)
+            return;
+
+        const t=e.touches[0];
+
+        updateJoystick(
+            t.clientX,
+            t.clientY
+        );
+
+    },
+    {passive:false}
+);
+
+
+joystick.addEventListener(
+    "touchend",
+    ()=>{
+
+        joystickActive=false;
+
+        joyX=0;
+        joyY=0;
+
+        stick.style.transform=
+            "translate(0,0)";
+
+    }
+);
+
+
+/* =====================================================
+   BOTÕES
+===================================================== */
+
+function bindButton(id,fn){
+
+    const el =
+        document.getElementById(id);
+
+    el.addEventListener(
+        "touchstart",
+        e=>{
+
+            e.preventDefault();
+
+            if(playing)
+                fn();
+
+        },
+        {passive:false}
+    );
+}
+
+
+bindButton("jump",jump);
+bindButton("flip",flip);
+bindButton("grind",grind);
+
+bindButton("boost",()=>{
+
+    player.boost=true;
+
+    setTimeout(
+        ()=>player.boost=false,
+        1200
+    );
+
+});
+
+
+/* =====================================================
+   AÇÕES
+===================================================== */
+
+function jump(){
+
+    if(
+        player.grounded
+    ){
+
+        player.vy=-17;
+
+        player.grounded=false;
+
+        createParticles(
+            player.x,
+            player.z,
+            12
+        );
+
+    }
+
+}
+
+
+function flip(){
+
+    if(
+        !player.grounded &&
+        !player.flipping
+    ){
+
+        player.flipping=true;
+
+        player.flipAngle=0;
+
+        addCombo(
+            "FLIP!",
+            100
+        );
+
+    }
+
+}
+
+
+function grind(){
+
+    if(!player.grounded){
+
+        player.grinding=true;
+
+        addCombo(
+            "GRIND!",
+            80
+        );
+
+    }
+
+}
+
+
+/* =====================================================
+   COMBO
+===================================================== */
+
+let comboTimer=0;
+
+
+function addCombo(text,points){
+
+    score +=
+        points * combo;
+
+    combo++;
+
+    comboTimer=180;
+
+    showCombo(
+        text+
+        "<br>+"+
+        points*combo+
+        " 🔥"
+    );
+
+}
+
+
+function updateCombo(){
+
+    if(comboTimer>0){
+
+        comboTimer--;
+
+    }
+    else{
+
+        combo=1;
+
+    }
+
+}
+
+
+/* =====================================================
+   PARTÍCULAS
+===================================================== */
+
+let particles=[];
+
+
+function createParticles(x,z,count){
+
+    for(let i=0;i<count;i++){
+
+        particles.push({
+
+            x:x,
+
+            z:z,
+
+            y:0,
+
+            vx:(Math.random()-.5)*5,
+
+            vz:(Math.random()-.5)*5,
+
+            life:30+
+
+                Math.random()*30
+
+        });
+
+    }
+
+}
+
+
+function updateParticles(){
+
+    particles.forEach(p=>{
+
+        p.x+=p.vx;
+        p.z+=p.vz;
+
+        p.life--;
+
+    });
+
+    particles=
+        particles.filter(
+            p=>p.life>0
+        );
+
+}
+
+
+function drawParticles(){
+
+    particles.forEach(p=>{
+
+        const q=
+            project(
+                p.x,
+                p.z,
+                p.y
+            );
+
+        ctx.fillStyle=
+            "rgba(255,255,255,.7)";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            q.x,
+            q.y,
+            3*q.scale,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    });
+
+}
+
+
+/* =====================================================
+   CIDADE
+===================================================== */
+
+const buildings=[];
+
+const streets=[];
+
+
+/* gerar cidade */
+
+for(let z=0;z<15000;z+=500){
+
+    buildings.push({
+
+        x:-650,
+        z:z,
+        width:400+
+            Math.random()*300,
+        height:250+
+            Math.random()*400,
+        color:
+            `hsl(${210+Math.random()*30},20%,${30+Math.random()*20}%)`
+
+    });
+
+
+    buildings.push({
+
+        x:650,
+        z:z+200,
+        width:400+
+            Math.random()*300,
+        height:250+
+            Math.random()*400,
+        color:
+            `hsl(${190+Math.random()*50},20%,${30+Math.random()*20}%)`
+
+    });
+
+}
+
+
+/* =====================================================
+   OBJETOS DA CIDADE
+===================================================== */
+
+const objects=[];
+
+
+/* rampas */
+
+for(let z=700;z<14500;z+=1700){
+
+    objects.push({
+
+        type:"ramp",
+
+        x:
+            (Math.random()>.5?300:-300),
+
+        z:z,
+
+        width:130,
+
+        height:90
+
+    });
+
+}
+
+
+/* bancos */
+
+for(let z=1000;z<15000;z+=900){
+
+    objects.push({
+
+        type:"bench",
+
+        x:
+            Math.random()>.5
+            ?250
+            :-250,
+
+        z:z,
+
+        width:100,
+
+        height:30
+
+    });
+
+}
+
+
+/* corrimãos */
+
+for(let z=1400;z<15000;z+=1400){
+
+    objects.push({
+
+        type:"rail",
+
+        x:
+            Math.random()>.5
+            ?200
+            :-200,
+
+        z:z,
+
+        width:170,
+
+        height:55
+
+    });
+
+}
+
+
+/* moedas */
+
+const coins=[];
+
+for(let z=500;z<15000;z+=180){
+
+    coins.push({
+
+        x:
+            (Math.random()-.5)*500,
+
+        z:z,
+
+        y:
+            40+
+            Math.random()*100,
+
+        collected:false
+
+    });
+
+}
+
+
+/* =====================================================
+   DESENHO DO CÉU
+===================================================== */
+
+function drawSky(){
+
+    const sky=
+        ctx.createLinearGradient(
+            0,0,
+            0,H
+        );
+
+    sky.addColorStop(
+        0,
+        "#56b8ff"
+    );
+
+    sky.addColorStop(
+        .6,
+        "#bdeaff"
+    );
+
+    sky.addColorStop(
+        1,
+        "#f4d29c"
+    );
+
+    ctx.fillStyle=sky;
+
+    ctx.fillRect(
+        0,0,W,H
+    );
+
+
+    /* sol */
+
+    ctx.fillStyle="#ffe37b";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        W*.8,
+        H*.18,
+        45,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+}
+
+
+/* =====================================================
+   PRÉDIOS
+===================================================== */
+
+function drawBuildings(){
+
+    buildings.forEach(b=>{
+
+        if(
+            b.z <
+            player.z-300
+        )
+            return;
+
+        if(
+            b.z >
+            player.z+5000
+        )
+            return;
+
+
+        const p=
+            project(
+                b.x,
+                b.z,
+                b.height
+            );
+
+        const base=
+            project(
+                b.x,
+                b.z,
+                0
+            );
+
+
+        const width=
+            b.width*p.scale;
+
+
+        ctx.fillStyle=b.color;
+
+        ctx.fillRect(
+
+            p.x-width/2,
+
+            p.y,
+
+            width,
+
+            base.y-p.y
+
+        );
+
+
+        /* janelas */
+
+        const rows=6;
+        const cols=4;
+
+        ctx.fillStyle=
+            "rgba(255,220,100,.6)";
+
+        for(
+            let r=0;
+            r<rows;
+            r++
+        ){
+
+            for(
+                let c=0;
+                c<cols;
+                c++
+            ){
+
+                const wx=
+                    p.x-width/2+
+                    width*(c+.5)/cols;
+
+                const wy=
+                    p.y+
+                    (base.y-p.y)*
+                    (r+.5)/rows;
+
+                const s=
+                    Math.max(
+                        2,
+                        7*p.scale
+                    );
+
+                ctx.fillRect(
+                    wx-s/2,
+                    wy-s/2,
+                    s,
+                    s*1.5
+                );
+
+            }
+
+        }
+
+    });
+
+}
+
+
+/* =====================================================
+   RUA 2.5D
+===================================================== */
+
+function drawRoad(){
+
+    const far=
+        project(
+            0,
+            5000
+        );
+
+    const near=
+        project(
+            0,
+            0
+        );
+
+
+    /* calçada */
+
+    ctx.fillStyle="#8b8b8b";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        far.x-500,
+        far.y
+    );
+
+    ctx.lineTo(
+        far.x+500,
+        far.y
+    );
+
+    ctx.lineTo(
+        near.x+800,
+        near.y
+    );
+
+    ctx.lineTo(
+        near.x-800,
+        near.y
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* rua */
+
+    ctx.fillStyle="#30343a";
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        far.x-350,
+        far.y
+    );
+
+    ctx.lineTo(
+        far.x+350,
+        far.y
+    );
+
+    ctx.lineTo(
+        near.x+500,
+        near.y
+    );
+
+    ctx.lineTo(
+        near.x-500,
+        near.y
+    );
+
+    ctx.closePath();
+
+    ctx.fill();
+
+
+    /* faixa central */
+
+    ctx.strokeStyle=
+        "rgba(255,255,255,.65)";
+
+    ctx.lineWidth=5;
+
+    ctx.setLineDash([30,30]);
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        far.x,
+        far.y
+    );
+
+    ctx.lineTo(
+        near.x,
+        near.y
+    );
+
+    ctx.stroke();
+
+    ctx.setLineDash([]);
+
+}
+
+
+/* =====================================================
+   OBJETOS
+===================================================== */
+
+function drawObjects(){
+
+    objects.forEach(o=>{
+
+        if(
+            o.z <
+            player.z-250
+        )
+            return;
+
+
+        const p=
+            project(
+                o.x,
+                o.z,
+                o.height
+            );
+
+        const base=
+            project(
+                o.x,
+                o.z
+            );
+
+
+        if(o.type==="ramp"){
+
+            const width=
+                o.width*p.scale;
+
+            ctx.fillStyle="#d68142";
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                p.x-width/2,
+                base.y
+            );
+
+            ctx.lineTo(
+                p.x+width/2,
+                base.y
+            );
+
+            ctx.lineTo(
+                p.x+width/2,
+                p.y
+            );
+
+            ctx.closePath();
+
+            ctx.fill();
+
+        }
+
+
+        if(o.type==="bench"){
+
+            const width=
+                o.width*p.scale;
+
+            ctx.fillStyle="#8b5a32";
+
+            ctx.fillRect(
+                p.x-width/2,
+                p.y,
+                width,
+                10*p.scale
+            );
+
+            ctx.fillRect(
+                p.x-width*.4,
+                p.y,
+                8*p.scale,
+                30*p.scale
+            );
+
+            ctx.fillRect(
+                p.x+width*.35,
+                p.y,
+                8*p.scale,
+                30*p.scale
+            );
+
+        }
+
+
+        if(o.type==="rail"){
+
+            const width=
+                o.width*p.scale;
+
+            ctx.strokeStyle="#d8d8d8";
+
+            ctx.lineWidth=
+                Math.max(
+                    2,
+                    5*p.scale
+                );
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                p.x-width/2,
+                p.y
+            );
+
+            ctx.lineTo(
+                p.x+width/2,
+                p.y
+            );
+
+            ctx.stroke();
+
+        }
+
+    });
+
+}
+
+
+/* =====================================================
+   MOEDAS
+===================================================== */
+
+function drawCoins(){
+
+    coins.forEach(c=>{
+
+        if(c.collected)
+            return;
+
+
+        if(
+            c.z <
+            player.z-100
+        )
+            return;
+
+
+        const p=
+            project(
+                c.x,
+                c.z,
+                c.y
+            );
+
+
+        const radius=
+            Math.max(
+                3,
+                12*p.scale
+            );
+
+
+        ctx.fillStyle="#ffd83d";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x,
+            p.y,
+            radius,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+
+        ctx.strokeStyle="#fff4a0";
+
+        ctx.lineWidth=2;
+
+        ctx.stroke();
+
+    });
+
+}
+
+
+/* =====================================================
+   PLAYER
+===================================================== */
+
+function drawPlayer(){
+
+    const p=
+        project(
+            player.x,
+            player.z,
+            player.y
+        );
+
+
+    const s=
+        Math.max(
+            .55,
+            p.scale*1.5
+        );
+
+
+    ctx.save();
+
+    ctx.translate(
+        p.x,
+        p.y
+    );
+
+    ctx.scale(s,s);
+
+    ctx.rotate(
+        player.rotation
+    );
+
+
+    /* sombra */
+
+    ctx.restore();
+
+
+    ctx.save();
+
+    ctx.translate(
+        p.x,
+        p.y
+    );
+
+    ctx.scale(s,s);
+
+
+    /* pernas */
+
+    ctx.strokeStyle="#222";
+
+    ctx.lineWidth=6;
+
+    ctx.beginPath();
+
+    ctx.moveTo(-5,5);
+    ctx.lineTo(-15,22);
+
+    ctx.moveTo(8,5);
+    ctx.lineTo(17,22);
+
+    ctx.stroke();
+
+
+    /* corpo */
+
+    ctx.fillStyle="#2468ff";
+
+    ctx.fillRect(
+        -10,
+        -22,
+        20,
+        28
+    );
+
+
+    /* cabeça */
+
+    ctx.fillStyle="#e7b58f";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        2,
+        -32,
+        11,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* boné */
+
+    ctx.fillStyle="#161616";
+
+    ctx.fillRect(
+        -8,
+        -42,
+        23,
+        6
+    );
+
+
+    /* braços */
+
+    ctx.strokeStyle="#e7b58f";
+
+    ctx.lineWidth=5;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        -8,-16
+    );
+
+    ctx.lineTo(
+        -25,-2
+    );
+
+    ctx.moveTo(
+        10,-16
+    );
+
+    ctx.lineTo(
+        24,-5
+    );
+
+    ctx.stroke();
+
+
+    /* skate */
+
+    ctx.strokeStyle="#e94b3b";
+
+    ctx.lineWidth=5;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        -28,
+        25
+    );
+
+    ctx.lineTo(
+        30,
+        25
+    );
+
+    ctx.stroke();
+
+
+    /* rodas */
+
+    ctx.fillStyle="#111";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        -18,
+        30,
+        5,
+        0,
+        Math.PI*2
+    );
+
+    ctx.arc(
+        20,
+        30,
+        5,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.restore();
+
+}
+
+
+/* =====================================================
+   FÍSICA
+===================================================== */
+
+function updatePlayer(){
+
+    if(!playing)
+        return;
+
+
+    /* direção */
+
+    player.x +=
+        joyX *
+        7;
+
+
+    /* limite da rua */
+
+    if(player.x>400)
+        player.x=400;
+
+    if(player.x<-400)
+        player.x=-400;
+
+
+    /* velocidade */
+
+    let acceleration=.08;
+
+    if(player.boost)
+        acceleration=.24;
+
+
+    player.vz +=
+        acceleration;
+
+
+    if(player.vz>12)
+        player.vz=12;
+
+
+    player.z +=
+        player.vz;
+
+
+    /* freio */
+
+    if(joyY>0.35){
+
+        player.vz -=
+            .15;
+
+    }
+
+
+    /* gravidade */
+
+    player.vy -=
+        .75;
+
+
+    player.y +=
+        player.vy;
+
+
+    /* chão */
+
+    if(player.y<=0){
+
+        player.y=0;
+
+        player.vy=0;
+
+        if(!player.grounded){
+
+            createParticles(
+                player.x,
+                player.z,
+                10
+            );
+
+        }
+
+        player.grounded=true;
+
+        player.flipping=false;
+
+        player.grinding=false;
+
+    }
+    else{
+
+        player.grounded=false;
+
+    }
+
+
+    /* flip */
+
+    if(player.flipping){
+
+        player.flipAngle+=.5;
+
+        player.rotation+=.5;
+
+    }
+    else{
+
+        player.rotation*=.85;
+
+    }
+
+
+    /* pontuação */
+
+    if(player.vz>4){
+
+        score+=
+            Math.floor(
+                player.vz/4
+            );
+
+    }
+
+
+    /* moedas */
+
+    collectCoins();
+
+
+    /* objetos */
+
+    checkObjects();
+
+
+    /* câmera */
+
+    camera.x +=
+        (player.x-camera.x)*.08;
+
+    camera.y +=
+        ((player.z-400)-camera.y)*.06;
+
+
+    updateCombo();
+
+}
+
+
+/* =====================================================
+   MOEDAS / COLISÃO
+===================================================== */
+
+function collectCoins(){
+
+    coins.forEach(c=>{
+
+        if(c.collected)
+            return;
+
+
+        const dx=
+            c.x-player.x;
+
+        const dz=
+            c.z-player.z;
+
+        const dy=
+            c.y-player.y;
+
+
+        const distance=
+            Math.sqrt(
+                dx*dx+
+                dz*dz+
+                dy*dy
+            );
+
+
+        if(distance<55){
+
+            c.collected=true;
+
+            collectedCoins++;
+
+            score+=
+                100*combo;
+
+            createParticles(
+                c.x,
+                c.z,
+                10
+            );
+
+            save();
+
+        }
+
+    });
+
+}
+
+
+function checkObjects(){
+
+    objects.forEach(o=>{
+
+        const dx=
+            Math.abs(
+                o.x-player.x
+            );
+
+        const dz=
+            Math.abs(
+                o.z-player.z
+            );
+
+
+        if(
+            dx<70 &&
+            dz<50
+        ){
+
+            if(
+                o.type==="rail" &&
+                !player.grounded
+            ){
+
+                player.grinding=true;
+
+                addCombo(
+                    "GRIND!",
+                    30
+                );
+
+            }
+
+            else if(
+                o.type!=="rail" &&
+                player.grounded
+            ){
+
+                score=
+                    Math.max(
+                        0,
+                        score-50
+                    );
+
+                combo=1;
+
+                showCombo(
+                    "💥 BATEU!"
+                );
+
+            }
+
+        }
+
+    });
+
+}
+
+
+/* =====================================================
+   CÂMERA / LOCALIZAÇÃO
+===================================================== */
+
+function updateLocation(){
+
+    let text="Downtown";
+
+    if(player.z>3500)
+        text="Skate Park";
+
+    if(player.z>7000)
+        text="Beach District";
+
+    if(player.z>10500)
+        text="Industrial";
+
+    if(player.z>13500)
+        text="Downtown East";
+
+    document.getElementById(
+        "location"
+    ).innerText=text;
+
+}
+
+
+/* =====================================================
+   COMBO VISUAL
+===================================================== */
+
+function showCombo(text){
+
+    const el=
+        document.getElementById(
+            "comboText"
+        );
+
+    el.innerHTML=text;
+
+    el.classList.remove("show");
+
+    void el.offsetWidth;
+
+    el.classList.add("show");
+
+    setTimeout(
+        ()=>{
+            el.classList.remove("show");
+        },
+        900
+    );
+
+}
+
+
+/* =====================================================
+   HUD
+===================================================== */
+
+function updateHUD(){
+
+    document.getElementById(
+        "score"
+    ).innerText=
+        Math.floor(score);
+
+
+    document.getElementById(
+        "combo"
+    ).innerText=
+        combo;
+
+
+    document.getElementById(
+        "coins"
+    ).innerText=
+        collectedCoins;
+
+
+    document.getElementById(
+        "speed"
+    ).innerText=
+        Math.floor(
+            player.vz*8
+        );
+
+}
+
+
+/* =====================================================
+   SALVAMENTO
+===================================================== */
+
+function save(){
+
+    localStorage.setItem(
+        "skateScore",
+        Math.floor(score)
+    );
+
+    localStorage.setItem(
+        "skateCoins",
+        collectedCoins
+    );
+
+}
+
+
+/* =====================================================
+   MENU
+===================================================== */
+
+document
+.getElementById("start")
+.addEventListener(
+    "click",
+    ()=>{
+
+        document
+        .getElementById("menu")
+        .style.display="none";
+
+        playing=true;
+
+    }
+);
+
+
+/* =====================================================
+   TECLADO
+===================================================== */
+
+addEventListener(
+    "keydown",
+    e=>{
+
+        if(e.key==="ArrowLeft")
+            joyX=-1;
+
+        if(e.key==="ArrowRight")
+            joyX=1;
+
+        if(e.key==="ArrowUp")
+            jump();
+
+        if(e.key===" ")
+            flip();
+
+        if(e.key==="Shift")
+            player.boost=true;
+
+    }
+);
+
+
+addEventListener(
+    "keyup",
+    e=>{
+
+        if(
+            e.key==="ArrowLeft" ||
+            e.key==="ArrowRight"
+        ){
+
+            joyX=0;
+
+        }
+
+        if(e.key==="Shift")
+            player.boost=false;
+
+    }
+);
+
+
+/* =====================================================
+   LOOP
+===================================================== */
+
+function draw(){
+
+    drawSky();
+
+    drawBuildings();
+
+    drawRoad();
+
+    drawObjects();
+
+    drawCoins();
+
+    drawParticles();
+
+    drawPlayer();
+
+}
+
+
+function loop(){
+
+    time++;
+
+    updatePlayer();
+
+    updateParticles();
+
+    updateLocation();
+
+    updateHUD();
+
+    draw();
+
+    requestAnimationFrame(loop);
+
+}
+
+
+loop();
+
+
+/* autosave */
+
+setInterval(
+    save,
+    5000
+);
+
+</script>
+
+</body>
+</html>
+```
