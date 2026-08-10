@@ -1,0 +1,1379 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Street Skate</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    touch-action: none;
+}
+
+html, body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #87ceeb;
+    font-family: Arial, sans-serif;
+}
+
+canvas {
+    display: block;
+    width: 100%;
+    height: 100%;
+}
+
+/* HUD */
+
+#hud {
+    position: fixed;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    justify-content: space-between;
+    color: white;
+    font-weight: bold;
+    font-size: 17px;
+    text-shadow: 2px 2px 3px #000;
+    pointer-events: none;
+    z-index: 5;
+}
+
+/* JOYSTICK */
+
+#joystick {
+    position: fixed;
+    left: 25px;
+    bottom: 30px;
+
+    width: 125px;
+    height: 125px;
+
+    border-radius: 50%;
+    background: rgba(255,255,255,.18);
+    border: 2px solid rgba(255,255,255,.4);
+
+    z-index: 10;
+}
+
+#stick {
+    position: absolute;
+
+    width: 60px;
+    height: 60px;
+
+    left: 32px;
+    top: 32px;
+
+    border-radius: 50%;
+
+    background: rgba(255,255,255,.65);
+    box-shadow: 0 4px 12px rgba(0,0,0,.3);
+}
+
+/* BOTÕES */
+
+.buttons {
+    position: fixed;
+    right: 20px;
+    bottom: 25px;
+
+    display: grid;
+    grid-template-columns: repeat(2, 75px);
+    gap: 12px;
+
+    z-index: 10;
+}
+
+.btn {
+    width: 75px;
+    height: 75px;
+
+    border-radius: 50%;
+
+    border: 2px solid rgba(255,255,255,.5);
+
+    background: rgba(20,20,20,.45);
+    color: white;
+
+    font-size: 14px;
+    font-weight: bold;
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    box-shadow: 0 5px 12px rgba(0,0,0,.35);
+}
+
+.btn:active {
+    transform: scale(.9);
+    background: rgba(255,255,255,.35);
+}
+
+#message {
+    position: fixed;
+    top: 45%;
+    width: 100%;
+    text-align: center;
+
+    color: white;
+    font-size: 35px;
+    font-weight: bold;
+
+    text-shadow: 3px 3px 5px black;
+
+    pointer-events: none;
+
+    opacity: 0;
+    transition: opacity .2s;
+
+    z-index: 20;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="hud">
+    <div>⭐ <span id="score">0</span></div>
+    <div>🔥 Combo x<span id="combo">1</span></div>
+    <div>⚡ <span id="speed">0</span></div>
+</div>
+
+<div id="message"></div>
+
+<!-- JOYSTICK -->
+
+<div id="joystick">
+    <div id="stick"></div>
+</div>
+
+<!-- BOTÕES -->
+
+<div class="buttons">
+
+    <div class="btn" id="jump">
+        ⬆️<br>PULO
+    </div>
+
+    <div class="btn" id="flip">
+        🔄<br>FLIP
+    </div>
+
+    <div class="btn" id="grind">
+        🛹<br>GRIND
+    </div>
+
+    <div class="btn" id="boost">
+        ⚡<br>BOOST
+    </div>
+
+</div>
+
+<script>
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let W = innerWidth;
+let H = innerHeight;
+
+function resize() {
+    W = canvas.width = innerWidth;
+    H = canvas.height = innerHeight;
+}
+
+resize();
+
+window.addEventListener("resize", resize);
+
+
+/* =========================
+   GAME
+========================= */
+
+let score = 0;
+let combo = 1;
+let gameSpeed = 5;
+
+let cameraX = 0;
+
+let gravity = 0.7;
+
+let gameOver = false;
+
+let particles = [];
+
+
+/* =========================
+   PLAYER
+========================= */
+
+const player = {
+
+    x: 200,
+    y: 300,
+
+    width: 55,
+    height: 30,
+
+    vx: 0,
+    vy: 0,
+
+    rotation: 0,
+
+    grounded: true,
+
+    flipping: false,
+
+    flipAngle: 0,
+
+    grinding: false,
+
+    boost: false
+
+};
+
+
+/* =========================
+   MUNDO
+========================= */
+
+let groundY = H - 100;
+
+let ramps = [
+
+    {
+        x: 700,
+        width: 160,
+        height: 80
+    },
+
+    {
+        x: 1450,
+        width: 180,
+        height: 100
+    },
+
+    {
+        x: 2300,
+        width: 150,
+        height: 70
+    }
+
+];
+
+
+let obstacles = [
+
+    {
+        x: 1050,
+        y: groundY - 40,
+        width: 55,
+        height: 40,
+        type: "cone"
+    },
+
+    {
+        x: 1250,
+        y: groundY - 60,
+        width: 100,
+        height: 60,
+        type: "box"
+    },
+
+    {
+        x: 1800,
+        y: groundY - 45,
+        width: 65,
+        height: 45,
+        type: "cone"
+    },
+
+    {
+        x: 2050,
+        y: groundY - 50,
+        width: 90,
+        height: 50,
+        type: "box"
+    }
+
+];
+
+
+/* =========================
+   MOEDAS
+========================= */
+
+let coins = [];
+
+for(let i = 0; i < 40; i++){
+
+    coins.push({
+
+        x: 500 + i * 180,
+
+        y: groundY - 80 - Math.random() * 100,
+
+        r: 9,
+
+        collected: false
+
+    });
+
+}
+
+
+/* =========================
+   JOYSTICK
+========================= */
+
+const joystick = document.getElementById("joystick");
+const stick = document.getElementById("stick");
+
+let joystickX = 0;
+let joystickY = 0;
+
+let joystickActive = false;
+
+function moveJoystick(x, y){
+
+    const rect = joystick.getBoundingClientRect();
+
+    const centerX = rect.left + rect.width / 2;
+    const centerY = rect.top + rect.height / 2;
+
+    let dx = x - centerX;
+    let dy = y - centerY;
+
+    const max = 45;
+
+    const distance = Math.sqrt(dx * dx + dy * dy);
+
+    if(distance > max){
+
+        dx = dx / distance * max;
+        dy = dy / distance * max;
+
+    }
+
+    stick.style.transform =
+        `translate(${dx}px, ${dy}px)`;
+
+    joystickX = dx / max;
+    joystickY = dy / max;
+}
+
+
+joystick.addEventListener("touchstart", e => {
+
+    joystickActive = true;
+
+    const t = e.touches[0];
+
+    moveJoystick(t.clientX, t.clientY);
+
+}, {passive:false});
+
+
+joystick.addEventListener("touchmove", e => {
+
+    if(!joystickActive) return;
+
+    const t = e.touches[0];
+
+    moveJoystick(t.clientX, t.clientY);
+
+}, {passive:false});
+
+
+joystick.addEventListener("touchend", () => {
+
+    joystickActive = false;
+
+    joystickX = 0;
+    joystickY = 0;
+
+    stick.style.transform = "translate(0,0)";
+
+});
+
+
+/* =========================
+   BOTÕES
+========================= */
+
+function button(id, callback){
+
+    const element = document.getElementById(id);
+
+    element.addEventListener("touchstart", e => {
+
+        e.preventDefault();
+
+        callback();
+
+    }, {passive:false});
+
+}
+
+
+button("jump", jump);
+
+button("flip", flip);
+
+button("grind", grind);
+
+button("boost", () => {
+
+    player.boost = true;
+
+    setTimeout(() => {
+
+        player.boost = false;
+
+    }, 1000);
+
+});
+
+
+/* =========================
+   AÇÕES
+========================= */
+
+function jump(){
+
+    if(player.grounded && !gameOver){
+
+        player.vy = -14;
+
+        player.grounded = false;
+
+        createParticles(
+            player.x,
+            player.y + 20,
+            8
+        );
+
+    }
+
+}
+
+
+function flip(){
+
+    if(!player.grounded && !player.flipping){
+
+        player.flipping = true;
+
+        player.flipAngle = 0;
+
+        combo++;
+
+        score += 50 * combo;
+
+    }
+
+}
+
+
+function grind(){
+
+    if(!player.grounded){
+
+        player.grinding = true;
+
+        score += 20;
+
+    }
+
+}
+
+
+/* =========================
+   PARTÍCULAS
+========================= */
+
+function createParticles(x, y, amount){
+
+    for(let i = 0; i < amount; i++){
+
+        particles.push({
+
+            x,
+            y,
+
+            vx:(Math.random()-.5)*5,
+
+            vy:(Math.random()-.5)*5,
+
+            life:30
+
+        });
+
+    }
+
+}
+
+
+function updateParticles(){
+
+    particles.forEach(p => {
+
+        p.x += p.vx;
+
+        p.y += p.vy;
+
+        p.life--;
+
+    });
+
+    particles =
+        particles.filter(p => p.life > 0);
+
+}
+
+
+function drawParticles(){
+
+    particles.forEach(p => {
+
+        ctx.fillStyle = "rgba(255,255,255,.7)";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x - cameraX,
+            p.y,
+            3,
+            0,
+            Math.PI * 2
+        );
+
+        ctx.fill();
+
+    });
+
+}
+
+
+/* =========================
+   PLAYER
+========================= */
+
+function updatePlayer(){
+
+    if(gameOver) return;
+
+
+    /* CONTROLE */
+
+    player.vx += joystickX * 0.25;
+
+    player.vx *= .96;
+
+
+    if(player.boost){
+
+        player.vx += .35;
+
+    }
+
+
+    player.vx += .08;
+
+
+    if(player.vx > 12)
+        player.vx = 12;
+
+    if(player.vx < -5)
+        player.vx = -5;
+
+
+    player.x += player.vx;
+
+
+    /* GRAVIDADE */
+
+    player.vy += gravity;
+
+    player.y += player.vy;
+
+
+    /* CHÃO */
+
+    let targetGround = groundY;
+
+
+    /* RAMPA */
+
+    ramps.forEach(r => {
+
+        if(
+            player.x > r.x &&
+            player.x < r.x + r.width
+        ){
+
+            let progress =
+                (player.x - r.x) / r.width;
+
+            targetGround =
+                groundY - r.height * progress;
+
+        }
+
+    });
+
+
+    if(player.y + player.height >= targetGround){
+
+        player.y =
+            targetGround - player.height;
+
+        player.vy = 0;
+
+        if(!player.grounded){
+
+            createParticles(
+                player.x,
+                player.y + player.height,
+                5
+            );
+
+        }
+
+        player.grounded = true;
+
+        player.flipping = false;
+
+        player.flipAngle = 0;
+
+        player.grinding = false;
+
+    }
+    else{
+
+        player.grounded = false;
+
+    }
+
+
+    /* FLIP */
+
+    if(player.flipping){
+
+        player.flipAngle += .45;
+
+        player.rotation += .45;
+
+    }
+    else{
+
+        player.rotation *= .85;
+
+    }
+
+
+    /* CAMERA */
+
+    cameraX =
+        player.x - W * .3;
+
+
+    if(cameraX < 0)
+        cameraX = 0;
+
+
+    /* SCORE */
+
+    score += Math.max(0, Math.floor(player.vx));
+
+
+    /* COLISÕES */
+
+    checkObstacles();
+
+    checkCoins();
+
+}
+
+
+/* =========================
+   OBSTÁCULOS
+========================= */
+
+function checkObstacles(){
+
+    obstacles.forEach(o => {
+
+        if(
+
+            player.x + player.width > o.x &&
+
+            player.x < o.x + o.width &&
+
+            player.y + player.height > o.y &&
+
+            player.y < o.y + o.height
+
+        ){
+
+            if(!player.grounded){
+
+                score += 100 * combo;
+
+                combo++;
+
+            }
+            else{
+
+                fall();
+
+            }
+
+        }
+
+    });
+
+}
+
+
+function fall(){
+
+    if(gameOver) return;
+
+    gameOver = true;
+
+    showMessage("💥 QUEDA!");
+
+    setTimeout(() => {
+
+        resetGame();
+
+    }, 1500);
+
+}
+
+
+/* =========================
+   MOEDAS
+========================= */
+
+function checkCoins(){
+
+    coins.forEach(c => {
+
+        if(c.collected) return;
+
+
+        let dx =
+            player.x + player.width/2 - c.x;
+
+        let dy =
+            player.y + player.height/2 - c.y;
+
+
+        let distance =
+            Math.sqrt(dx*dx + dy*dy);
+
+
+        if(distance < 35){
+
+            c.collected = true;
+
+            score += 100;
+
+            createParticles(
+                c.x,
+                c.y,
+                10
+            );
+
+        }
+
+    });
+
+}
+
+
+/* =========================
+   DESENHO DO CENÁRIO
+========================= */
+
+function drawBackground(){
+
+    /* CÉU */
+
+    ctx.fillStyle = "#78c8ff";
+
+    ctx.fillRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+
+    /* SOL */
+
+    ctx.fillStyle = "#ffe45c";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        W - 80,
+        90,
+        45,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+
+    /* PRÉDIOS */
+
+    let offset =
+        cameraX * .25;
+
+
+    for(let i = -5; i < 30; i++){
+
+        let x =
+            i * 150 - offset;
+
+        let height =
+            100 + ((i * 73) % 150 + 150) % 150;
+
+
+        ctx.fillStyle =
+            i % 2 === 0
+            ? "#667788"
+            : "#556677";
+
+
+        ctx.fillRect(
+            x,
+            groundY - height,
+            120,
+            height
+        );
+
+
+        /* JANELAS */
+
+        ctx.fillStyle = "#ffd966";
+
+        for(let yy = groundY-height+20;
+            yy < groundY-10;
+            yy += 30){
+
+            for(let xx=x+15;
+                xx<x+100;
+                xx+=30){
+
+                ctx.fillRect(
+                    xx,
+                    yy,
+                    10,
+                    12
+                );
+
+            }
+
+        }
+
+    }
+
+
+    /* GRAMA */
+
+    ctx.fillStyle = "#55a83e";
+
+    ctx.fillRect(
+        0,
+        groundY,
+        W,
+        20
+    );
+
+
+    /* ASFALTO */
+
+    ctx.fillStyle = "#30343b";
+
+    ctx.fillRect(
+        0,
+        groundY + 20,
+        W,
+        H
+    );
+
+
+    /* FAIXAS */
+
+    ctx.strokeStyle = "#e9e9e9";
+
+    ctx.lineWidth = 4;
+
+    for(let x = -cameraX % 100; x < W; x += 100){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            groundY + 80
+        );
+
+        ctx.lineTo(
+            x + 50,
+            groundY + 80
+        );
+
+        ctx.stroke();
+
+    }
+
+}
+
+
+/* =========================
+   RAMPAS
+========================= */
+
+function drawRamps(){
+
+    ramps.forEach(r => {
+
+        let x =
+            r.x - cameraX;
+
+
+        if(
+            x + r.width < 0 ||
+            x > W
+        ) return;
+
+
+        ctx.fillStyle = "#c9823c";
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            groundY
+        );
+
+        ctx.lineTo(
+            x + r.width,
+            groundY
+        );
+
+        ctx.lineTo(
+            x + r.width,
+            groundY - r.height
+        );
+
+        ctx.closePath();
+
+        ctx.fill();
+
+
+        ctx.strokeStyle = "#8c5428";
+
+        ctx.stroke();
+
+    });
+
+}
+
+
+/* =========================
+   OBSTÁCULOS
+========================= */
+
+function drawObstacles(){
+
+    obstacles.forEach(o => {
+
+        let x =
+            o.x - cameraX;
+
+
+        if(x + o.width < 0 || x > W)
+            return;
+
+
+        if(o.type === "cone"){
+
+            ctx.fillStyle = "#ff6b22";
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x + o.width/2,
+                o.y
+            );
+
+            ctx.lineTo(
+                x + o.width,
+                o.y + o.height
+            );
+
+            ctx.lineTo(
+                x,
+                o.y + o.height
+            );
+
+            ctx.closePath();
+
+            ctx.fill();
+
+        }
+        else{
+
+            ctx.fillStyle = "#875f43";
+
+            ctx.fillRect(
+                x,
+                o.y,
+                o.width,
+                o.height
+            );
+
+        }
+
+    });
+
+}
+
+
+/* =========================
+   MOEDAS
+========================= */
+
+function drawCoins(){
+
+    coins.forEach(c => {
+
+        if(c.collected)
+            return;
+
+
+        let x =
+            c.x - cameraX;
+
+
+        if(x < -20 || x > W+20)
+            return;
+
+
+        ctx.fillStyle = "#ffd700";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            x,
+            c.y,
+            c.r,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+
+        ctx.strokeStyle = "#fff3a3";
+
+        ctx.lineWidth = 2;
+
+        ctx.stroke();
+
+    });
+
+}
+
+
+/* =========================
+   SKATE
+========================= */
+
+function drawPlayer(){
+
+    let x =
+        player.x - cameraX;
+
+    let y =
+        player.y;
+
+
+    ctx.save();
+
+
+    ctx.translate(
+        x + player.width/2,
+        y + player.height/2
+    );
+
+
+    ctx.rotate(player.rotation);
+
+
+    /* CABEÇA */
+
+    ctx.fillStyle = "#f2c29b";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        8,
+        -25,
+        9,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* BONÉ */
+
+    ctx.fillStyle = "#222";
+
+    ctx.fillRect(
+        0,
+        -34,
+        18,
+        5
+    );
+
+
+    /* CORPO */
+
+    ctx.fillStyle = "#2878ff";
+
+    ctx.fillRect(
+        -8,
+        -18,
+        18,
+        25
+    );
+
+
+    /* PERNAS */
+
+    ctx.strokeStyle = "#222";
+
+    ctx.lineWidth = 6;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        -3,
+        5
+    );
+
+    ctx.lineTo(
+        -15,
+        20
+    );
+
+    ctx.moveTo(
+        8,
+        5
+    );
+
+    ctx.lineTo(
+        18,
+        20
+    );
+
+    ctx.stroke();
+
+
+    /* SKATE */
+
+    ctx.strokeStyle = "#e74c3c";
+
+    ctx.lineWidth = 5;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        -25,
+        25
+    );
+
+    ctx.lineTo(
+        28,
+        25
+    );
+
+    ctx.stroke();
+
+
+    /* RODAS */
+
+    ctx.fillStyle = "#111";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        -17,
+        29,
+        5,
+        0,
+        Math.PI*2
+    );
+
+    ctx.arc(
+        18,
+        29,
+        5,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.restore();
+
+}
+
+
+/* =========================
+   MENSAGEM
+========================= */
+
+function showMessage(text){
+
+    const msg =
+        document.getElementById("message");
+
+    msg.innerText = text;
+
+    msg.style.opacity = 1;
+
+
+    setTimeout(() => {
+
+        msg.style.opacity = 0;
+
+    }, 900);
+
+}
+
+
+/* =========================
+   RESET
+========================= */
+
+function resetGame(){
+
+    player.x = 200;
+
+    player.y = groundY - player.height;
+
+    player.vx = 0;
+
+    player.vy = 0;
+
+    player.rotation = 0;
+
+    player.grounded = true;
+
+    player.flipping = false;
+
+    cameraX = 0;
+
+    combo = 1;
+
+    gameOver = false;
+
+}
+
+
+/* =========================
+   HUD
+========================= */
+
+function updateHUD(){
+
+    document.getElementById("score")
+        .innerText = Math.floor(score);
+
+    document.getElementById("combo")
+        .innerText = combo;
+
+    document.getElementById("speed")
+        .innerText = Math.floor(
+            Math.abs(player.vx) * 10
+        );
+
+}
+
+
+/* =========================
+   GAME LOOP
+========================= */
+
+function gameLoop(){
+
+    ctx.clearRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+
+    /* manter chão responsivo */
+
+    groundY = H - 100;
+
+
+    updatePlayer();
+
+    updateParticles();
+
+
+    drawBackground();
+
+    drawRamps();
+
+    drawObstacles();
+
+    drawCoins();
+
+    drawParticles();
+
+    drawPlayer();
+
+
+    updateHUD();
+
+
+    requestAnimationFrame(gameLoop);
+
+}
+
+
+gameLoop();
+
+</script>
+
+</body>
+</html>
