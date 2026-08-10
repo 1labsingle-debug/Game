@@ -1,0 +1,2106 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+
+<title>Street Skate 2</title>
+
+<style>
+*{
+    margin:0;
+    padding:0;
+    box-sizing:border-box;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:none;
+}
+
+html,body{
+    width:100%;
+    height:100%;
+    overflow:hidden;
+    background:#79c9ff;
+    font-family:Arial,sans-serif;
+}
+
+canvas{
+    width:100%;
+    height:100%;
+    display:block;
+}
+
+#hud{
+    position:fixed;
+    top:10px;
+    left:10px;
+    right:10px;
+    z-index:20;
+
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+
+    color:white;
+    font-size:14px;
+    font-weight:bold;
+
+    text-shadow:2px 2px 4px #000;
+    pointer-events:none;
+}
+
+#trick{
+    position:fixed;
+    top:20%;
+    left:0;
+    width:100%;
+
+    text-align:center;
+
+    color:white;
+    font-size:27px;
+    font-weight:900;
+
+    text-shadow:3px 3px 5px #000;
+
+    opacity:0;
+    transform:scale(.7);
+
+    transition:.18s;
+
+    z-index:30;
+}
+
+#pause{
+    position:fixed;
+    right:12px;
+    top:45px;
+
+    width:42px;
+    height:42px;
+
+    border-radius:50%;
+    border:2px solid #fff8;
+
+    background:#0007;
+    color:white;
+
+    font-size:18px;
+    z-index:25;
+}
+
+#joystick{
+    position:fixed;
+    left:22px;
+    bottom:25px;
+
+    width:125px;
+    height:125px;
+
+    border-radius:50%;
+
+    background:#ffffff22;
+    border:2px solid #ffffff55;
+
+    z-index:25;
+}
+
+#stick{
+    position:absolute;
+
+    width:58px;
+    height:58px;
+
+    left:31px;
+    top:31px;
+
+    border-radius:50%;
+
+    background:#ffffffaa;
+    box-shadow:0 4px 12px #0005;
+}
+
+#buttons{
+    position:fixed;
+    right:15px;
+    bottom:18px;
+
+    display:grid;
+    grid-template-columns:70px 70px;
+    gap:10px;
+
+    z-index:25;
+}
+
+.btn{
+    width:70px;
+    height:70px;
+
+    border-radius:50%;
+
+    background:#111a;
+    border:2px solid #ffffff66;
+
+    color:white;
+
+    display:flex;
+    align-items:center;
+    justify-content:center;
+
+    text-align:center;
+
+    font-size:11px;
+    font-weight:bold;
+
+    box-shadow:0 5px 12px #0005;
+}
+
+.btn:active{
+    transform:scale(.9);
+    background:#fff5;
+}
+
+#startScreen,
+#pauseScreen{
+    position:fixed;
+    inset:0;
+
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+    align-items:center;
+
+    background:linear-gradient(#0006,#000a);
+
+    color:white;
+    text-align:center;
+
+    z-index:100;
+}
+
+#pauseScreen{
+    display:none;
+}
+
+.title{
+    font-size:48px;
+    font-weight:900;
+
+    text-shadow:4px 4px #000;
+
+    transform:rotate(-4deg);
+}
+
+.subtitle{
+    margin:10px 0 25px;
+    font-size:15px;
+}
+
+.startBtn{
+    padding:16px 40px;
+
+    border:0;
+    border-radius:30px;
+
+    background:#ff4d32;
+    color:white;
+
+    font-size:18px;
+    font-weight:bold;
+}
+
+.small{
+    margin-top:18px;
+    font-size:13px;
+    opacity:.8;
+}
+</style>
+</head>
+
+<body>
+
+<canvas id="game"></canvas>
+
+<div id="hud">
+    <div>⭐ <span id="score">0</span></div>
+    <div>🔥 x<span id="combo">1</span></div>
+    <div>⚡ <span id="speed">0</span></div>
+    <div>🏆 <span id="best">0</span></div>
+</div>
+
+<div id="trick"></div>
+
+<button id="pause">Ⅱ</button>
+
+<div id="joystick">
+    <div id="stick"></div>
+</div>
+
+<div id="buttons">
+    <div class="btn" id="jump">⬆️<br>OLLIE</div>
+    <div class="btn" id="flip">🔄<br>FLIP</div>
+    <div class="btn" id="grind">🛹<br>GRIND</div>
+    <div class="btn" id="boost">⚡<br>BOOST</div>
+</div>
+
+<div id="startScreen">
+    <div class="title">STREET<br>SKATE</div>
+
+    <div class="subtitle">
+        Faça manobras • Grind • Combine • Sobreviva
+    </div>
+
+    <button class="startBtn" id="start">
+        JOGAR
+    </button>
+
+    <div class="small">
+        Use o joystick para controlar o skate
+    </div>
+</div>
+
+<div id="pauseScreen">
+    <div class="title">PAUSADO</div>
+
+    <button class="startBtn" id="resume">
+        CONTINUAR
+    </button>
+</div>
+
+<script>
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+let W,H;
+
+function resize(){
+
+    W = canvas.width = innerWidth;
+    H = canvas.height = innerHeight;
+
+}
+
+resize();
+
+addEventListener("resize",resize);
+
+
+/* =========================================================
+   GAME STATE
+========================================================= */
+
+let playing=false;
+let paused=false;
+
+let score=0;
+let combo=1;
+
+let distance=0;
+
+let best=Number(localStorage.getItem("skateBest")||0);
+
+document.getElementById("best").textContent=best;
+
+let cameraX=0;
+
+let groundY=0;
+
+let difficulty=1;
+
+let lastTime=performance.now();
+
+let particles=[];
+
+
+/* =========================================================
+   PLAYER
+========================================================= */
+
+const player={
+
+    x:180,
+    y:0,
+
+    w:55,
+    h:30,
+
+    vx:0,
+    vy:0,
+
+    rotation:0,
+
+    grounded:true,
+
+    flipping:false,
+
+    flipAngle:0,
+
+    grind:false,
+
+    grindRail:null,
+
+    boost:false,
+
+    airTime:0,
+
+    tricks:0,
+
+    wheelie:0
+
+};
+
+
+/* =========================================================
+   WORLD
+========================================================= */
+
+let world=[];
+
+let nextWorldX=500;
+
+const worldChunk=900;
+
+
+/* =========================================================
+   JOYSTICK
+========================================================= */
+
+let joyX=0;
+let joyY=0;
+
+let joyActive=false;
+
+const joystick=document.getElementById("joystick");
+const stick=document.getElementById("stick");
+
+function joystickMove(x,y){
+
+    const r=joystick.getBoundingClientRect();
+
+    const cx=r.left+r.width/2;
+    const cy=r.top+r.height/2;
+
+    let dx=x-cx;
+    let dy=y-cy;
+
+    const max=43;
+
+    const d=Math.hypot(dx,dy);
+
+    if(d>max){
+
+        dx=dx/d*max;
+        dy=dy/d*max;
+
+    }
+
+    joyX=dx/max;
+    joyY=dy/max;
+
+    stick.style.transform=
+        `translate(${dx}px,${dy}px)`;
+
+}
+
+joystick.addEventListener("touchstart",e=>{
+
+    e.preventDefault();
+
+    joyActive=true;
+
+    joystickMove(
+        e.touches[0].clientX,
+        e.touches[0].clientY
+    );
+
+},{passive:false});
+
+
+joystick.addEventListener("touchmove",e=>{
+
+    e.preventDefault();
+
+    if(!joyActive)return;
+
+    joystickMove(
+        e.touches[0].clientX,
+        e.touches[0].clientY
+    );
+
+},{passive:false});
+
+
+joystick.addEventListener("touchend",()=>{
+
+    joyActive=false;
+
+    joyX=0;
+    joyY=0;
+
+    stick.style.transform="translate(0,0)";
+
+});
+
+
+/* =========================================================
+   BUTTON HELPER
+========================================================= */
+
+function button(id,fn){
+
+    document.getElementById(id)
+    .addEventListener("touchstart",e=>{
+
+        e.preventDefault();
+
+        if(!playing||paused)return;
+
+        fn();
+
+    },{passive:false});
+
+}
+
+
+/* =========================================================
+   AUDIO
+========================================================= */
+
+let audio=null;
+
+function initAudio(){
+
+    if(audio)return;
+
+    audio=new (
+        window.AudioContext||
+        window.webkitAudioContext
+    )();
+
+}
+
+function sound(freq,duration=.08,type="square"){
+
+    if(!audio)return;
+
+    const osc=audio.createOscillator();
+    const gain=audio.createGain();
+
+    osc.type=type;
+
+    osc.frequency.value=freq;
+
+    gain.gain.value=.04;
+
+    osc.connect(gain);
+    gain.connect(audio.destination);
+
+    osc.start();
+
+    gain.gain.exponentialRampToValueAtTime(
+        .001,
+        audio.currentTime+duration
+    );
+
+    osc.stop(
+        audio.currentTime+duration
+    );
+
+}
+
+
+/* =========================================================
+   TRICKS
+========================================================= */
+
+function ollie(){
+
+    if(!player.grounded)return;
+
+    player.vy=-14;
+
+    player.grounded=false;
+
+    player.airTime=0;
+
+    player.grind=false;
+
+    combo=Math.max(combo,1);
+
+    sound(180,.07);
+
+    dust(player.x,player.y+player.h,8);
+
+}
+
+
+function flip(){
+
+    if(player.grounded||player.flipping)return;
+
+    player.flipping=true;
+
+    player.flipAngle=0;
+
+    player.tricks++;
+
+    score+=50*combo;
+
+    showTrick("KICKFLIP +"+50*combo);
+
+    sound(420,.12);
+
+}
+
+
+function grind(){
+
+    if(player.grounded)return;
+
+    const rail=findRail();
+
+    if(!rail)return;
+
+    player.grind=true;
+    player.grindRail=rail;
+
+    player.vy=0;
+
+    player.rotation=0;
+
+    combo++;
+
+    score+=100*combo;
+
+    showTrick("GRIND! +"+100*combo);
+
+    sound(250,.1);
+
+}
+
+
+function boost(){
+
+    player.boost=true;
+
+    score+=5;
+
+    sound(600,.05);
+
+    setTimeout(()=>{
+
+        player.boost=false;
+
+    },900);
+
+}
+
+
+button("jump",ollie);
+button("flip",flip);
+button("grind",grind);
+button("boost",boost);
+
+
+/* =========================================================
+   PROCEDURAL MAP
+========================================================= */
+
+function generateChunk(){
+
+    let start=nextWorldX;
+
+    const count=6;
+
+    for(let i=0;i<count;i++){
+
+        const x=start+i*150+
+            Math.random()*80;
+
+        const type=Math.random();
+
+        if(type<.28){
+
+            world.push({
+
+                type:"ramp",
+
+                x,
+                w:150,
+                h:50+Math.random()*55
+
+            });
+
+        }
+
+        else if(type<.52){
+
+            world.push({
+
+                type:"rail",
+
+                x,
+                y:groundY-65-
+                    Math.random()*45,
+
+                w:120+Math.random()*80
+
+            });
+
+        }
+
+        else if(type<.75){
+
+            world.push({
+
+                type:"box",
+
+                x,
+                w:50+Math.random()*55,
+                h:35+Math.random()*25
+
+            });
+
+        }
+
+        else{
+
+            world.push({
+
+                type:"cone",
+
+                x,
+                w:30,
+                h:40
+
+            });
+
+        }
+
+
+        /* moedas */
+
+        if(Math.random()<.9){
+
+            for(let m=0;m<4;m++){
+
+                world.push({
+
+                    type:"coin",
+
+                    x:x+m*32,
+
+                    y:groundY-
+                        90-
+                        Math.random()*100,
+
+                    taken:false
+
+                });
+
+            }
+
+        }
+
+    }
+
+    nextWorldX+=worldChunk;
+
+}
+
+
+/* =========================================================
+   RAIL SEARCH
+========================================================= */
+
+function findRail(){
+
+    for(const o of world){
+
+        if(o.type!=="rail")continue;
+
+        const px=player.x;
+
+        if(
+            px>o.x-25 &&
+            px<o.x+o.w+25 &&
+
+            Math.abs(
+                player.y+player.h-o.y
+            )<50
+        ){
+
+            return o;
+
+        }
+
+    }
+
+    return null;
+
+}
+
+
+/* =========================================================
+   PLAYER PHYSICS
+========================================================= */
+
+function updatePlayer(dt){
+
+    const step=Math.min(dt,2);
+
+    /* aceleração */
+
+    player.vx += joyX*.25*step;
+
+    player.vx += .075*step;
+
+    if(player.boost)
+        player.vx+=.32*step;
+
+    player.vx*=Math.pow(.97,step);
+
+    player.vx=Math.max(
+        -4,
+        Math.min(
+            player.vx,
+            player.boost?15:10
+        )
+    );
+
+
+    player.x+=player.vx*step;
+
+    distance=Math.floor(
+        player.x/10
+    );
+
+
+    /* dificuldade */
+
+    difficulty=
+        1+
+        Math.min(
+            5,
+            player.x/5000
+        );
+
+
+    /* geração */
+
+    while(
+        nextWorldX<
+        player.x+W*2
+    ){
+
+        generateChunk();
+
+    }
+
+
+    /* gravidade */
+
+    if(!player.grind){
+
+        player.vy+=.72*step;
+
+        player.y+=player.vy*step;
+
+    }
+
+
+    /* chão */
+
+    let floor=groundY;
+
+
+    /* rampas */
+
+    for(const o of world){
+
+        if(o.type!=="ramp")continue;
+
+        if(
+            player.x+player.w/2>o.x &&
+            player.x+player.w/2<
+            o.x+o.w
+        ){
+
+            const p=
+                (player.x+player.w/2-o.x)/o.w;
+
+            const rampY=
+                groundY-o.h*p;
+
+            floor=
+                Math.min(
+                    floor,
+                    rampY
+                );
+
+        }
+
+    }
+
+
+    /* grind */
+
+    if(player.grind){
+
+        const r=player.grindRail;
+
+        player.x+=player.vx*.5;
+
+        player.y=
+            r.y-player.h;
+
+        player.vy=0;
+
+        player.rotation=0;
+
+        score+=
+            Math.max(
+                1,
+                Math.floor(player.vx)
+            )*combo;
+
+
+        if(
+            player.x>
+            r.x+r.w
+        ){
+
+            player.grind=false;
+            player.grindRail=null;
+
+            showTrick("GRIND END");
+
+        }
+
+    }
+
+
+    /* pouso */
+
+    if(
+        !player.grind &&
+        player.y+player.h>=floor
+    ){
+
+        const wasAir=!player.grounded;
+
+        player.y=floor-player.h;
+
+        player.vy=0;
+
+        player.grounded=true;
+
+
+        if(wasAir){
+
+            const rot=
+                Math.abs(
+                    normalizeAngle(
+                        player.rotation
+                    )
+                );
+
+
+            if(rot<.22){
+
+                score+=250*combo;
+
+                showTrick(
+                    "PERFECT LANDING!"
+                );
+
+                sound(700,.12);
+
+                combo=Math.min(
+                    combo+1,
+                    20
+                );
+
+            }
+            else if(rot<.55){
+
+                score+=100*combo;
+
+                showTrick(
+                    "LANDING +"+
+                    100*combo
+                );
+
+                combo++;
+
+            }
+            else{
+
+                bail();
+
+                return;
+
+            }
+
+            dust(
+                player.x,
+                player.y+player.h,
+                7
+            );
+
+        }
+
+        player.flipping=false;
+        player.flipAngle=0;
+        player.rotation=0;
+
+        player.airTime=0;
+
+    }
+    else{
+
+        player.grounded=false;
+
+        player.airTime+=step;
+
+    }
+
+
+    /* flip */
+
+    if(player.flipping){
+
+        player.flipAngle+=.48*step;
+
+        player.rotation+=.48*step;
+
+        if(player.flipAngle>=Math.PI*2){
+
+            player.flipping=false;
+
+            showTrick(
+                "FLIP COMPLETO!"
+            );
+
+            score+=150*combo;
+
+            combo++;
+
+            sound(800,.08);
+
+        }
+
+    }
+
+
+    /* camera */
+
+    cameraX=
+        player.x-W*.30;
+
+    if(cameraX<0)
+        cameraX=0;
+
+
+    /* obstáculos */
+
+    collisionCheck();
+
+}
+
+
+/* =========================================================
+   COLLISION
+========================================================= */
+
+function collisionCheck(){
+
+    for(const o of world){
+
+        if(
+            o.type!=="box" &&
+            o.type!=="cone"
+        )continue;
+
+        const oy=
+            o.type==="box"
+            ?groundY-o.h
+            :groundY-o.h;
+
+
+        if(
+
+            player.x+player.w*.75>o.x &&
+
+            player.x<o.x+o.w &&
+
+            player.y+player.h>oy+5 &&
+
+            player.y<oy+o.h
+
+        ){
+
+            if(player.grounded){
+
+                bail();
+
+                return;
+
+            }
+
+        }
+
+    }
+
+
+    /* moedas */
+
+    for(const o of world){
+
+        if(
+            o.type!=="coin"||
+            o.taken
+        )continue;
+
+
+        if(
+            Math.hypot(
+                player.x+player.w/2-o.x,
+                player.y+player.h/2-o.y
+            )<35
+        ){
+
+            o.taken=true;
+
+            score+=100*combo;
+
+            showTrick(
+                "+100 🪙"
+            );
+
+            sound(900,.06,"sine");
+
+            coinParticles(
+                o.x,
+                o.y
+            );
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   BAIL
+========================================================= */
+
+function bail(){
+
+    showTrick("💥 BAIL!");
+
+    sound(80,.3,"sawtooth");
+
+    combo=1;
+
+    player.vx*=.3;
+
+    player.vy=-7;
+
+    player.rotation=.8;
+
+    dust(
+        player.x,
+        player.y+player.h,
+        15
+    );
+
+}
+
+
+/* =========================================================
+   PARTICLES
+========================================================= */
+
+function dust(x,y,n){
+
+    for(let i=0;i<n;i++){
+
+        particles.push({
+
+            x,
+            y,
+
+            vx:(Math.random()-.5)*4,
+
+            vy:-Math.random()*3,
+
+            life:30+
+                Math.random()*20,
+
+            size:2+
+                Math.random()*4
+
+        });
+
+    }
+
+}
+
+
+function coinParticles(x,y){
+
+    for(let i=0;i<12;i++){
+
+        particles.push({
+
+            x,
+            y,
+
+            vx:(Math.random()-.5)*6,
+
+            vy:(Math.random()-.5)*6,
+
+            life:30,
+
+            size:3
+
+        });
+
+    }
+
+}
+
+
+function updateParticles(dt){
+
+    for(const p of particles){
+
+        p.x+=p.vx*dt;
+
+        p.y+=p.vy*dt;
+
+        p.vy+=.12*dt;
+
+        p.life-=dt;
+
+    }
+
+    particles=
+        particles.filter(
+            p=>p.life>0
+        );
+
+}
+
+
+/* =========================================================
+   DRAW BACKGROUND
+========================================================= */
+
+function drawBackground(){
+
+    /* céu */
+
+    const sky=
+        ctx.createLinearGradient(
+            0,0,0,H
+        );
+
+    sky.addColorStop(
+        0,
+        "#5cb8ff"
+    );
+
+    sky.addColorStop(
+        1,
+        "#d7f2ff"
+    );
+
+    ctx.fillStyle=sky;
+
+    ctx.fillRect(
+        0,0,W,H
+    );
+
+
+    /* sol */
+
+    ctx.fillStyle="#ffe76b";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        W-90,
+        90,
+        42,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* prédios */
+
+    const layers=[
+        [.15,"#71849b",140],
+        [.27,"#5d7186",190],
+        [.40,"#495c70",240]
+    ];
+
+
+    for(const layer of layers){
+
+        const parallax=
+            cameraX*layer[0];
+
+        for(
+            let x=-300-(parallax%170);
+            x<W+300;
+            x+=170
+        ){
+
+            const h=
+                layer[2]+
+                Math.sin(
+                    (x+parallax)*.03
+                )*30;
+
+            ctx.fillStyle=layer[1];
+
+            ctx.fillRect(
+                x,
+                groundY-h,
+                130,
+                h
+            );
+
+
+            ctx.fillStyle="#f6d76b";
+
+            for(
+                let yy=groundY-h+20;
+                yy<groundY-15;
+                yy+=32
+            ){
+
+                for(
+                    let xx=x+15;
+                    xx<x+115;
+                    xx+=30
+                ){
+
+                    if(
+                        Math.random()>.18
+                    ){
+
+                        ctx.fillRect(
+                            xx,
+                            yy,
+                            9,
+                            12
+                        );
+
+                    }
+
+                }
+
+            }
+
+        }
+
+    }
+
+
+    /* rua */
+
+    ctx.fillStyle="#5a5f66";
+
+    ctx.fillRect(
+        0,
+        groundY,
+        W,
+        H-groundY
+    );
+
+
+    /* calçada */
+
+    ctx.fillStyle="#b7b7b7";
+
+    ctx.fillRect(
+        0,
+        groundY-7,
+        W,
+        7
+    );
+
+
+    /* faixas */
+
+    ctx.strokeStyle="#ddd";
+
+    ctx.lineWidth=4;
+
+    for(
+        let x=-cameraX%120;
+        x<W;
+        x+=120
+    ){
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            x,
+            groundY+65
+        );
+
+        ctx.lineTo(
+            x+60,
+            groundY+65
+        );
+
+        ctx.stroke();
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW WORLD
+========================================================= */
+
+function drawWorld(){
+
+    for(const o of world){
+
+        const x=o.x-cameraX;
+
+        if(x<-250||x>W+250)
+            continue;
+
+
+        if(o.type==="ramp"){
+
+            ctx.fillStyle="#d17b3d";
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x,
+                groundY
+            );
+
+            ctx.lineTo(
+                x+o.w,
+                groundY
+            );
+
+            ctx.lineTo(
+                x+o.w,
+                groundY-o.h
+            );
+
+            ctx.closePath();
+
+            ctx.fill();
+
+        }
+
+
+        else if(o.type==="rail"){
+
+            ctx.strokeStyle="#ddd";
+
+            ctx.lineWidth=7;
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x,
+                o.y
+            );
+
+            ctx.lineTo(
+                x+o.w,
+                o.y
+            );
+
+            ctx.stroke();
+
+
+            ctx.lineWidth=5;
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x+15,
+                o.y
+            );
+
+            ctx.lineTo(
+                x+15,
+                groundY
+            );
+
+            ctx.moveTo(
+                x+o.w-15,
+                o.y
+            );
+
+            ctx.lineTo(
+                x+o.w-15,
+                groundY
+            );
+
+            ctx.stroke();
+
+        }
+
+
+        else if(o.type==="box"){
+
+            ctx.fillStyle="#98633f";
+
+            ctx.fillRect(
+                x,
+                groundY-o.h,
+                o.w,
+                o.h
+            );
+
+            ctx.fillStyle="#c58a5a";
+
+            ctx.fillRect(
+                x,
+                groundY-o.h,
+                o.w,
+                7
+            );
+
+        }
+
+
+        else if(o.type==="cone"){
+
+            ctx.fillStyle="#ff7028";
+
+            ctx.beginPath();
+
+            ctx.moveTo(
+                x+o.w/2,
+                groundY-o.h
+            );
+
+            ctx.lineTo(
+                x+o.w,
+                groundY
+            );
+
+            ctx.lineTo(
+                x,
+                groundY
+            );
+
+            ctx.closePath();
+
+            ctx.fill();
+
+        }
+
+
+        else if(o.type==="coin"){
+
+            if(o.taken)continue;
+
+            ctx.fillStyle="#ffd83d";
+
+            ctx.beginPath();
+
+            ctx.arc(
+                x,
+                o.y,
+                10,
+                0,
+                Math.PI*2
+            );
+
+            ctx.fill();
+
+            ctx.strokeStyle="#fff5a3";
+
+            ctx.lineWidth=2;
+
+            ctx.stroke();
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   DRAW PLAYER
+========================================================= */
+
+function drawPlayer(){
+
+    const x=
+        player.x-cameraX;
+
+    const y=
+        player.y;
+
+
+    ctx.save();
+
+    ctx.translate(
+        x+player.w/2,
+        y+player.h/2
+    );
+
+    ctx.rotate(
+        player.rotation
+    );
+
+
+    /* sombra */
+
+    if(player.grounded){
+
+        ctx.fillStyle="#0005";
+
+        ctx.beginPath();
+
+        ctx.ellipse(
+            0,
+            30,
+            35,
+            6,
+            0,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    }
+
+
+    /* cabeça */
+
+    ctx.fillStyle="#e5ad80";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        8,
+        -28,
+        10,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* cabelo */
+
+    ctx.fillStyle="#222";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        5,
+        -33,
+        10,
+        Math.PI,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    /* corpo */
+
+    ctx.fillStyle="#2879e8";
+
+    ctx.fillRect(
+        -8,
+        -18,
+        20,
+        27
+    );
+
+
+    /* braços */
+
+    ctx.strokeStyle="#e5ad80";
+
+    ctx.lineWidth=5;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        -7,
+        -12
+    );
+
+    ctx.lineTo(
+        -23,
+        0
+    );
+
+    ctx.moveTo(
+        10,
+        -12
+    );
+
+    ctx.lineTo(
+        24,
+        -2
+    );
+
+    ctx.stroke();
+
+
+    /* pernas */
+
+    ctx.strokeStyle="#202020";
+
+    ctx.lineWidth=6;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        -2,
+        7
+    );
+
+    ctx.lineTo(
+        -15,
+        22
+    );
+
+    ctx.moveTo(
+        8,
+        7
+    );
+
+    ctx.lineTo(
+        19,
+        22
+    );
+
+    ctx.stroke();
+
+
+    /* skate */
+
+    ctx.strokeStyle="#ed4035";
+
+    ctx.lineWidth=5;
+
+    ctx.beginPath();
+
+    ctx.moveTo(
+        -28,
+        27
+    );
+
+    ctx.lineTo(
+        30,
+        27
+    );
+
+    ctx.stroke();
+
+
+    /* rodas */
+
+    ctx.fillStyle="#151515";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        -19,
+        31,
+        5,
+        0,
+        Math.PI*2
+    );
+
+    ctx.arc(
+        20,
+        31,
+        5,
+        0,
+        Math.PI*2
+    );
+
+    ctx.fill();
+
+
+    ctx.restore();
+
+}
+
+
+/* =========================================================
+   PARTICLES DRAW
+========================================================= */
+
+function drawParticles(){
+
+    for(const p of particles){
+
+        ctx.globalAlpha=
+            Math.max(
+                0,
+                p.life/40
+            );
+
+        ctx.fillStyle="#fff";
+
+        ctx.beginPath();
+
+        ctx.arc(
+            p.x-cameraX,
+            p.y,
+            p.size,
+            0,
+            Math.PI*2
+        );
+
+        ctx.fill();
+
+    }
+
+    ctx.globalAlpha=1;
+
+}
+
+
+/* =========================================================
+   TRICK MESSAGE
+========================================================= */
+
+let trickTimer;
+
+function showTrick(text){
+
+    const el=
+        document.getElementById("trick");
+
+    el.textContent=text;
+
+    el.style.opacity=1;
+
+    el.style.transform=
+        "scale(1.15)";
+
+    clearTimeout(trickTimer);
+
+    trickTimer=setTimeout(()=>{
+
+        el.style.opacity=0;
+
+        el.style.transform=
+            "scale(.7)";
+
+    },700);
+
+}
+
+
+/* =========================================================
+   HUD
+========================================================= */
+
+function updateHUD(){
+
+    document.getElementById("score")
+        .textContent=
+        Math.floor(score);
+
+    document.getElementById("combo")
+        .textContent=
+        combo;
+
+    document.getElementById("speed")
+        .textContent=
+        Math.floor(
+            Math.abs(player.vx)*10
+        );
+
+    document.getElementById("best")
+        .textContent=
+        best;
+
+}
+
+
+/* =========================================================
+   ANGLE
+========================================================= */
+
+function normalizeAngle(a){
+
+    while(a>Math.PI)
+        a-=Math.PI*2;
+
+    while(a<-Math.PI)
+        a+=Math.PI*2;
+
+    return a;
+
+}
+
+
+/* =========================================================
+   CLEAN WORLD
+========================================================= */
+
+function cleanWorld(){
+
+    world=
+        world.filter(o=>{
+
+            if(o.type==="coin")
+                return !o.taken;
+
+            return o.x>
+                player.x-1000;
+
+        });
+
+}
+
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+function loop(now){
+
+    const dt=
+        Math.min(
+            2,
+            (now-lastTime)/16.67
+        );
+
+    lastTime=now;
+
+
+    if(playing&&!paused){
+
+        updatePlayer(dt);
+
+        updateParticles(dt);
+
+        cleanWorld();
+
+        score+=
+            Math.max(
+                0,
+                player.vx*.25
+            );
+
+        if(score>best){
+
+            best=Math.floor(score);
+
+            localStorage.setItem(
+                "skateBest",
+                best
+            );
+
+        }
+
+    }
+
+
+    groundY=H-100;
+
+
+    ctx.clearRect(
+        0,
+        0,
+        W,
+        H
+    );
+
+
+    drawBackground();
+
+    drawWorld();
+
+    drawParticles();
+
+    drawPlayer();
+
+    updateHUD();
+
+
+    requestAnimationFrame(loop);
+
+}
+
+requestAnimationFrame(loop);
+
+
+/* =========================================================
+   START
+========================================================= */
+
+document.getElementById("start")
+.addEventListener("click",()=>{
+
+    initAudio();
+
+    if(audio&&audio.state==="suspended")
+        audio.resume();
+
+    startGame();
+
+});
+
+
+function startGame(){
+
+    score=0;
+
+    combo=1;
+
+    distance=0;
+
+    cameraX=0;
+
+    nextWorldX=500;
+
+    world=[];
+
+    particles=[];
+
+    player.x=180;
+
+    player.y=H-130;
+
+    player.vx=0;
+
+    player.vy=0;
+
+    player.rotation=0;
+
+    player.grounded=true;
+
+    player.flipping=false;
+
+    player.grind=false;
+
+    player.grindRail=null;
+
+    playing=true;
+
+    paused=false;
+
+    document.getElementById(
+        "startScreen"
+    ).style.display="none";
+
+    document.getElementById(
+        "pauseScreen"
+    ).style.display="none";
+
+
+    while(
+        nextWorldX<
+        player.x+W*2
+    ){
+
+        generateChunk();
+
+    }
+
+}
+
+
+/* =========================================================
+   PAUSE
+========================================================= */
+
+document.getElementById("pause")
+.addEventListener("click",()=>{
+
+    if(!playing)return;
+
+    paused=!paused;
+
+    document.getElementById(
+        "pauseScreen"
+    ).style.display=
+        paused?"flex":"none";
+
+});
+
+
+document.getElementById("resume")
+.addEventListener("click",()=>{
+
+    paused=false;
+
+    document.getElementById(
+        "pauseScreen"
+    ).style.display="none";
+
+});
+
+
+/* =========================================================
+   KEYBOARD
+   útil para testar no PC
+========================================================= */
+
+addEventListener("keydown",e=>{
+
+    if(e.code==="Space")
+        ollie();
+
+    if(e.code==="KeyF")
+        flip();
+
+    if(e.code==="KeyG")
+        grind();
+
+    if(e.code==="KeyB")
+        boost();
+
+    if(e.code==="Escape"){
+
+        paused=!paused;
+
+        document.getElementById(
+            "pauseScreen"
+        ).style.display=
+            paused?"flex":"none";
+
+    }
+
+});
+
+</script>
+
+</body>
+</html>
+```
