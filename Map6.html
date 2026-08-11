@@ -1,0 +1,546 @@
+<!doctype html>
+<html lang="pt-BR">
+ <head><script>window["__codeletBootstrap__"]=JSON.parse('{"A":"A","B":"20260811-05-f555caa","C":{"Abril Fatface":"YACgEZbkUVE,0","Alfa Slab One":"YACgEYS9sJU,0","Anton":"YACgEcYqQ-A,0","Archivo":"YAHO2-t-jNE,0","Arial":"YAGyDvJ_4Ts,0","Bebas Neue":"YACgESME5ew,0","Bricolage Grotesque":"YAFyMcdwzpc,0","Canva Sans":"YAFLd8sKbwc,2","Caveat":"YALBs2ploWQ,0","Comic Sans MS":"YAHO2VMiyZo,0","Cormorant Garamond":"YAFdJhX-538,0","Courier New":"YAGzXiGs0_8,0","DM Sans":"YAD1aU3sLnI,0","DM Serif Display":"YAD1aYG82rc,0","Forum":"YACgEcnnqB4,0","Fraunces":"YAEul-FRQw4,0","Georgia":"YAGzXkO0pEM,0","Helvetica Neue":"YAFcf6CtJfI,0","Impact":"YAFcfnjI7Vk,0","Inter":"YAFdJvSyp_k,3","Iowan Old Style":"YAGNIFa8j9o,0","Jacques Francois":"YAHO2a5g66Q,0","JetBrains Mono":"YAFdJksXcAk,0","Libre Baskerville":"YACgEUFdPdA,0","Manrope":"YAHO2b2feC4,0","Merriweather":"YACgEXvHxxs,0","Montserrat":"YADLjI9qxTA,0","Nunito":"YACgEX8C5Gg,0","Oleo Script":"YACgEQQ14jI,0","Phantom Sans":"YAHO2E8Pb88,0","Playfair Display":"YACgEYmuCJE,0","Poppins":"YAFdJjbTu24,1","Press Start 2P":"YAFyGr-8pmQ,0","Quicksand":"YADWjpfPmdk,0","Raleway":"YACgEVg3xZg,0","Segoe UI":"YAHNdRD1Klw,0","Source Sans 3":"YAG4lO1Mj10,0","Spectral":"YAHO2rVUHIM,0","Times New Roman":"YAGzXW3gftg,0","Times":"YAGzXW3gftg,0","Ubuntu":"YACgERDU--Q,0","Work Sans":"YAGXhLOKv44,0","Yellowtail":"YACgEYG4kG4,0","ui-monospace":"YADlN8CFZ8Q,0","ui-sans-serif":"YACkoN-xg4g,0"}}');</script><script src="/_sdk/7949ff62d67710d5.telemetry_sdk.js" integrity="sha512-KIvXA82Di44YY/RH9/63A9MuTuavYgDFG8PfErJn7Wli4K0LAOk+coo/aPXk3+ZNL96nHh9VYD4PE+fLes+laQ=="></script>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Thrnd City</title>
+  <script src="https://cdn.tailwindcss.com/3.4.17"></script>
+  <script src="https://cdn.jsdelivr.net/npm/lucide@0.263.0/dist/umd/lucide.min.js"></script>
+  <script src="/_sdk/0e8d3a91e1c6f495.data_sdk.js" integrity="sha512-c00oDoGjsMgluCLLEyVl3suwEkgjOGGplVFbsilUoBg4aMKNmsL3mwsc9r0dPn95qiSZyjBousQXgROkAW7p/w=="></script>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&amp;family=Space+Mono:wght@400;700&amp;display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --ink: #e9f1e8;
+      --muted: #a8b9aa;
+      --night: #101812;
+      --panel: #1a261d;
+      --line: #38513d;
+      --acid: #d5ff42;
+      --orange: #ff914d;
+      --cyan: #5ce1e6;
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: #101812;
+      color: var(--ink);
+      font-family: "DM Sans", sans-serif;
+    }
+    button, input { font: inherit; }
+    button { -webkit-tap-highlight-color: transparent; }
+    button:focus-visible { outline: 3px solid var(--acid); outline-offset: 3px; }
+    .game-shell {
+      position: relative;
+      width: 100%;
+      min-height: calc(100 * min(var(--vh, 1vh), 1vh));
+      overflow: hidden;
+      background: #101812;
+    }
+    #game-canvas {
+      width: 100%;
+      height: calc(100 * min(var(--vh, 1vh), 1vh));
+      display: block;
+      image-rendering: pixelated;
+      cursor: crosshair;
+    }
+    .grain {
+      pointer-events: none;
+      position: absolute;
+      inset: 0;
+      opacity: .12;
+      background-image: radial-gradient(rgba(255,255,255,.45) .7px, transparent .8px);
+      background-size: 4px 4px;
+      mix-blend-mode: overlay;
+    }
+    .hud-card {
+      background: rgba(16, 24, 18, .87);
+      border: 1px solid rgba(213,255,66,.42);
+      box-shadow: 0 8px 30px rgba(0,0,0,.3);
+      backdrop-filter: blur(10px);
+    }
+    .hotbar-slot {
+      width: 70px;
+      min-height: 66px;
+      border: 1px solid #54705a;
+      background: rgba(19, 32, 21, .95);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      transition: transform .15s, border-color .15s, background .15s;
+    }
+    .hotbar-slot.active {
+      border-color: var(--acid);
+      background: #2a3b20;
+      transform: translateY(-5px);
+      box-shadow: 0 0 0 2px rgba(213,255,66,.14);
+    }
+    .hotbar-key {
+      position: absolute;
+      top: 5px;
+      left: 7px;
+      color: var(--muted);
+      font: 10px "Space Mono", monospace;
+    }
+    .hotbar-count {
+      position: absolute;
+      right: 7px;
+      bottom: 5px;
+      color: var(--acid);
+      font: 11px "Space Mono", monospace;
+    }
+    .phone {
+      position: absolute;
+      z-index: 20;
+      top: 16px;
+      right: 16px;
+      width: min(380px, calc(100% - 32px));
+      height: min(680px, calc(100 * min(var(--vh, 1vh), 1vh) - 32px));
+      background: #101812;
+      border: 8px solid #304334;
+      border-radius: 34px;
+      box-shadow: -16px 18px 50px rgba(0,0,0,.58);
+      transform: translateX(calc(100% + 28px));
+      transition: transform .32s cubic-bezier(.2,.8,.2,1);
+      overflow: hidden;
+    }
+    .phone.open { transform: translateX(0); }
+    .phone-notch {
+      width: 112px;
+      height: 19px;
+      border-radius: 0 0 14px 14px;
+      background: #304334;
+      margin: 0 auto;
+    }
+    .app-tab {
+      border: 1px solid #3b513e;
+      background: #1b291e;
+      color: #d5e4d3;
+      border-radius: 12px;
+      padding: 9px 8px;
+      font-size: 11px;
+      font-weight: 700;
+      transition: .16s;
+    }
+    .app-tab.active, .app-tab:hover { background: #d5ff42; color: #142014; border-color: #d5ff42; }
+    .phone-panel { display: none; }
+    .phone-panel.active { display: block; animation: rise .2s ease-out; }
+    @keyframes rise { from { opacity: 0; transform: translateY(7px); } to { opacity: 1; transform: translateY(0); } }
+    #joystick-base {
+      touch-action: none;
+      width: 104px;
+      height: 104px;
+      border-radius: 50%;
+      background: rgba(15, 28, 17, .7);
+      border: 1px solid rgba(213,255,66,.42);
+      position: relative;
+      backdrop-filter: blur(6px);
+    }
+    #joystick-knob {
+      width: 44px;
+      height: 44px;
+      position: absolute;
+      left: 29px;
+      top: 29px;
+      border-radius: 50%;
+      background: var(--acid);
+      box-shadow: 0 3px 10px rgba(0,0,0,.35);
+      transition: transform .05s;
+    }
+    .toast {
+      position: absolute;
+      z-index: 30;
+      left: 50%;
+      top: 92px;
+      transform: translate(-50%, -12px);
+      opacity: 0;
+      pointer-events: none;
+      transition: .25s;
+      max-width: min(380px, calc(100% - 32px));
+    }
+    .toast.show { opacity: 1; transform: translate(-50%, 0); }
+    .map-grid {
+      background-color: #26372a;
+      background-image: linear-gradient(#3e5743 1px, transparent 1px), linear-gradient(90deg, #3e5743 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    @media (max-width: 640px) {
+      .top-hud { top: 10px; left: 10px; right: 10px; }
+      .hotbar-slot { width: 58px; min-height: 58px; }
+      .desktop-help { display: none; }
+    }
+  </style>
+  <script src="/_sdk/04cc6185e046f597.resizing_sdk.js" type="text/javascript" integrity="sha512-CiE/G92aQF0nxneFg1kdOvXih8sQ1Z2a2QI3+r/WvzJwQqH6+IyB3iL07OkJmpm3ABAaf07+FnqWny98f5sR6w=="></script>
+ </head>
+ <body data-template-id="__page-root">
+  <div class="game-shell">
+   <canvas id="game-canvas" aria-label="Cidade explorável Thrnd City"></canvas>
+   <div class="grain"></div>
+   <header class="top-hud absolute z-10 top-4 left-4 right-4 flex items-start justify-between gap-3 pointer-events-none">
+    <div class="hud-card rounded-2xl px-4 py-3 pointer-events-auto">
+     <div class="flex items-center gap-3">
+      <div class="w-9 h-9 rounded-xl bg-lime-300 text-[#132014] flex items-center justify-center"><i data-lucide="building-2" width="19" height="19"></i>
+      </div>
+      <div>
+       <h1 data-template-id="game-title" class="canva-text font-extrabold leading-none"></h1>
+       <p data-template-id="game-subtitle" class="canva-text text-xs mt-1"></p>
+      </div>
+     </div>
+    </div>
+    <div class="flex gap-2 pointer-events-auto">
+     <div class="hud-card rounded-2xl px-3 py-2 text-right">
+      <div data-template-id="wallet-label" class="canva-text text-[10px] font-bold tracking-widest uppercase"></div>
+      <div class="flex items-center justify-end gap-1 mt-0.5 text-lime-300 font-bold"><i data-lucide="coins" width="15" height="15"></i><span id="money-value">0</span>
+      </div>
+     </div><button id="phone-toggle" data-template-id="phone-button" type="button" class="canva-button hud-card rounded-2xl px-3 flex flex-col items-center justify-center hover:border-lime-300" aria-label="Abrir smartphone"> <i data-lucide="smartphone" width="20" height="20"></i> <span class="text-[9px] mt-1 font-bold">M</span> </button>
+    </div>
+   </header>
+   <main aria-label="Exploração da cidade">
+    <div class="absolute z-10 bottom-28 left-1/2 -translate-x-1/2 w-full max-w-md px-4 text-center pointer-events-none">
+     <div id="objective-card" class="hud-card inline-flex items-center gap-2 rounded-full px-4 py-2"><i data-lucide="crosshair" class="text-lime-300" width="15" height="15"></i> <span data-template-id="objective-text" class="canva-text text-xs font-semibold"></span>
+     </div>
+    </div>
+    <aside class="desktop-help absolute z-10 left-4 bottom-5 hud-card rounded-xl px-3 py-2 text-xs text-[#b7c9b9]"><span data-template-id="controls-label" class="canva-text"></span>
+    </aside>
+    <div class="absolute z-10 left-4 bottom-20 md:bottom-5" aria-label="Joystick virtual">
+     <div id="joystick-base">
+      <div id="joystick-knob"></div>
+     </div>
+    </div><button id="interact-button" data-template-id="interact-button" type="button" class="canva-button absolute z-10 right-4 bottom-24 md:bottom-6 rounded-full px-4 py-3 bg-orange-400 text-[#251307] font-extrabold shadow-lg hover:brightness-110"> <span class="flex items-center gap-2"><i data-lucide="wrench" width="18" height="18"></i><span></span></span> </button>
+    <section aria-label="Inventário rápido" class="absolute z-10 bottom-4 left-1/2 -translate-x-1/2">
+     <div class="hud-card rounded-2xl p-2 flex items-center gap-1.5">
+      <div class="hotbar-slot active" data-slot="0">
+       <span class="hotbar-key">1</span><i data-lucide="package" width="22"></i><span class="hotbar-count" id="slot-count-0">0</span>
+      </div>
+      <div class="hotbar-slot" data-slot="1">
+       <span class="hotbar-key">2</span><i data-lucide="box" width="22"></i><span class="hotbar-count" id="slot-count-1">0</span>
+      </div>
+      <div class="hotbar-slot" data-slot="2">
+       <span class="hotbar-key">3</span><i data-lucide="battery-charging" width="22"></i><span class="hotbar-count" id="slot-count-2">0</span>
+      </div>
+      <div class="hotbar-slot" data-slot="3">
+       <span class="hotbar-key">4</span><i data-lucide="sparkles" width="22"></i><span class="hotbar-count" id="slot-count-3">0</span>
+      </div>
+     </div>
+    </section>
+   </main>
+   <aside id="phone" class="phone" aria-label="Smartphone Thrnd">
+    <div class="phone-notch"></div>
+    <div class="px-5 pb-5 h-full overflow-y-auto">
+     <header class="flex items-center justify-between mt-3 mb-4">
+      <div>
+       <div class="text-[10px] text-lime-300 font-bold tracking-[.17em]">
+        THRND OS
+       </div>
+       <h2 data-template-id="phone-title" class="canva-text font-extrabold mt-0.5"></h2>
+      </div><button id="phone-close" data-template-id="phone-close-button" type="button" class="canva-button w-9 h-9 rounded-full bg-[#26372a] flex items-center justify-center hover:bg-[#3a5140]" aria-label="Fechar smartphone"> <i data-lucide="x" width="18" height="18"></i> </button>
+     </header>
+     <nav aria-label="Aplicativos do celular" class="grid grid-cols-3 gap-2"><button data-app="map" data-template-id="app-map" type="button" class="canva-button app-tab active"><i data-lucide="map" class="mx-auto mb-1" width="16"></i><span></span></button> <button data-app="wallet" data-template-id="app-wallet" type="button" class="canva-button app-tab"><i data-lucide="wallet" class="mx-auto mb-1" width="16"></i><span></span></button> <button data-app="shop" data-template-id="app-shop" type="button" class="canva-button app-tab"><i data-lucide="shopping-bag" class="mx-auto mb-1" width="16"></i><span></span></button> <button data-app="friends" data-template-id="app-friends" type="button" class="canva-button app-tab"><i data-lucide="users" class="mx-auto mb-1" width="16"></i><span></span></button> <button data-app="missions" data-template-id="app-missions" type="button" class="canva-button app-tab"><i data-lucide="clipboard-list" class="mx-auto mb-1" width="16"></i><span></span></button> <button data-app="support" data-template-id="app-support" type="button" class="canva-button app-tab"><i data-lucide="headphones" class="mx-auto mb-1" width="16"></i><span></span></button>
+     </nav>
+     <section id="panel-map" class="phone-panel active mt-5">
+      <h3 data-template-id="map-heading" class="canva-text font-bold"></h3>
+      <p data-template-id="map-description" class="canva-text text-sm mt-1"></p>
+      <div class="map-grid relative rounded-2xl h-52 mt-4 overflow-hidden border border-[#55705a]">
+       <div class="absolute left-[15%] top-0 w-7 h-full bg-[#69736a] opacity-80"></div>
+       <div class="absolute top-[42%] left-0 h-7 w-full bg-[#69736a] opacity-80"></div>
+       <div class="absolute left-[49%] top-[20%] w-20 h-16 rounded bg-[#a26745]"></div>
+       <div class="absolute left-[9%] top-[12%] w-14 h-12 rounded bg-[#59725c]"></div>
+       <div id="map-player" class="absolute w-4 h-4 rounded-full bg-lime-300 border-2 border-[#142014] shadow-[0_0_0_4px_rgba(213,255,66,.2)]"></div>
+      </div>
+      <div class="mt-4 p-3 rounded-xl bg-[#1b291e] border border-[#38513d] text-sm"><span data-template-id="coordinates-label" class="canva-text text-[#a8b9aa]"></span> <strong id="coordinate-value" class="ml-1 font-mono text-lime-300">0, 0</strong>
+      </div>
+     </section>
+     <section id="panel-wallet" class="phone-panel mt-5">
+      <h3 data-template-id="wallet-heading" class="canva-text font-bold"></h3>
+      <div class="mt-4 rounded-2xl bg-lime-300 text-[#142014] p-5">
+       <div data-template-id="wallet-balance-label" class="canva-text text-xs font-bold uppercase tracking-widest"></div>
+       <div class="text-4xl font-extrabold mt-2">
+        <span id="wallet-money">0</span> sats
+       </div>
+      </div><button id="save-button" data-template-id="save-button" type="button" class="canva-button w-full mt-4 rounded-xl py-3 bg-[#ff914d] text-[#251307] font-extrabold hover:brightness-110"> <span class="flex justify-center items-center gap-2"><i data-lucide="save" width="17"></i><span></span></span> </button>
+      <p id="save-status" class="text-xs text-center mt-3 text-[#a8b9aa]" aria-live="polite"></p>
+     </section>
+     <section id="panel-shop" class="phone-panel mt-5">
+      <h3 data-template-id="shop-heading" class="canva-text font-bold"></h3>
+      <p data-template-id="shop-description" class="canva-text text-sm mt-1"></p>
+      <div class="mt-4 rounded-2xl border border-[#38513d] bg-[#1b291e] p-4 flex items-center justify-between">
+       <div>
+        <div data-template-id="shop-item-name" class="canva-text font-bold"></div>
+        <div data-template-id="shop-item-cost" class="canva-text text-xs text-lime-300 mt-1"></div>
+       </div><i data-lucide="package-plus" class="text-orange-400" width="25"></i>
+      </div>
+     </section>
+     <section id="panel-friends" class="phone-panel mt-5">
+      <h3 data-template-id="friends-heading" class="canva-text font-bold"></h3>
+      <div class="mt-4 rounded-2xl border border-[#38513d] bg-[#1b291e] p-4 flex gap-3 items-center">
+       <div class="w-11 h-11 rounded-full bg-cyan-300 text-[#142014] flex items-center justify-center font-extrabold">
+        N
+       </div>
+       <div>
+        <div data-template-id="friend-name" class="canva-text font-bold"></div>
+        <div data-template-id="friend-status" class="canva-text text-xs text-lime-300"></div>
+       </div>
+      </div>
+     </section>
+     <section id="panel-missions" class="phone-panel mt-5">
+      <h3 data-template-id="missions-heading" class="canva-text font-bold"></h3>
+      <div class="mt-4 rounded-2xl border border-[#38513d] bg-[#1b291e] p-4">
+       <div class="flex justify-between gap-2">
+        <div data-template-id="mission-name" class="canva-text font-bold"></div><span class="text-xs bg-lime-300 text-[#142014] px-2 py-1 rounded-full font-bold">ATIVA</span>
+       </div>
+       <p data-template-id="mission-description" class="canva-text text-sm mt-2"></p>
+       <div class="mt-3 h-2 bg-[#38513d] rounded-full overflow-hidden">
+        <div id="mission-progress" class="h-full bg-lime-300 rounded-full" style="width:0%"></div>
+       </div>
+       <div id="mission-progress-label" class="text-xs text-[#a8b9aa] mt-2">
+        0 / 3 suprimentos
+       </div>
+      </div>
+     </section>
+     <section id="panel-support" class="phone-panel mt-5">
+      <h3 data-template-id="support-heading" class="canva-text font-bold"></h3>
+      <p data-template-id="support-description" class="canva-text text-sm mt-2"></p>
+      <div class="mt-4 p-4 rounded-2xl border border-[#38513d] bg-[#1b291e] text-sm text-[#cfe0cf]"><i data-lucide="radio" class="inline text-lime-300 mr-2" width="17"></i><span data-template-id="support-status" class="canva-text"></span>
+      </div>
+     </section>
+    </div>
+   </aside>
+   <div id="toast" class="toast hud-card rounded-xl px-4 py-3 text-sm font-semibold text-center" aria-live="polite"></div>
+  </div>
+  <script src="/_sdk/1a0e63f7a958ec3e.editing_sdk.js" integrity="sha512-lW+iibZ5vXaBl3IQ1K3ooQE1gfdDZxiO+Y7NpWdeypLOwr1WIYo3edm3nu+wyePemyM75tcU3yV7YyImK9wxMQ=="></script>
+  <script>
+    (() => {
+      const canvas = document.getElementById('game-canvas');
+      const ctx = canvas.getContext('2d');
+      const TILE = 48, CHUNK = 8, WORLD_CHUNK_PX = TILE * CHUNK;
+      const player = { x: 120, y: 120, radius: 13, speed: 230, dx: 0, dy: 0 };
+      const camera = { x: player.x, y: player.y };
+      const keys = {};
+      const joystick = { x: 0, y: 0, active: false };
+      const state = {
+        money: 120,
+        inventory: [0, 0, 0, 0],
+        missions: { supplies: 0 },
+        visited: new Set(),
+        collected: new Set(),
+        activeSlot: 0,
+        saveRecord: null,
+        loaded: false
+      };
+      let lastTime = performance.now(), toastTimer, nearWorkshop = false;
+
+      function hash(x, y) {
+        let n = x * 374761393 + y * 668265263;
+        n = (n ^ (n >> 13)) * 1274126177;
+        return ((n ^ (n >> 16)) >>> 0) / 4294967295;
+      }
+      function chunkKey(cx, cy) { return cx + ',' + cy; }
+      function isRoad(tx, ty) {
+        const localX = ((tx % CHUNK) + CHUNK) % CHUNK;
+        const localY = ((ty % CHUNK) + CHUNK) % CHUNK;
+        return localX === 0 || localX === 1 || localY === 0 || localY === 1;
+      }
+      function tileType(tx, ty) {
+        if (isRoad(tx, ty)) return 'road';
+        const cx = Math.floor(tx / CHUNK), cy = Math.floor(ty / CHUNK);
+        const lx = ((tx % CHUNK) + CHUNK) % CHUNK, ly = ((ty % CHUNK) + CHUNK) % CHUNK;
+        const seed = hash(cx, cy);
+        if (seed > .82 && lx >= 3 && lx <= 5 && ly >= 3 && ly <= 5) return 'plaza';
+        if (seed > .68 && seed < .76 && lx >= 3 && lx <= 5 && ly >= 3 && ly <= 4) return 'workshop';
+        if ((lx >= 3 && lx <= 5 && ly >= 3 && ly <= 5) || (seed > .35 && lx >= 5 && ly >= 5)) return 'building';
+        return 'grass';
+      }
+      function isSolid(x, y) {
+        const tx = Math.floor(x / TILE), ty = Math.floor(y / TILE);
+        return tileType(tx, ty) === 'building' || tileType(tx, ty) === 'workshop';
+      }
+      function canMove(nx, ny) {
+        const checks = [[-11,-11],[11,-11],[-11,11],[11,11]];
+        return checks.every(([ox, oy]) => !isSolid(nx + ox, ny + oy));
+      }
+      function drawTile(tx, ty) {
+        const x = tx * TILE - camera.x + canvas.width / 2;
+        const y = ty * TILE - camera.y + canvas.height / 2;
+        const type = tileType(tx, ty);
+        if (type === 'road') {
+          ctx.fillStyle = '#59615b'; ctx.fillRect(x, y, TILE + 1, TILE + 1);
+          ctx.strokeStyle = '#7d877c'; ctx.lineWidth = 2;
+          if (tx % CHUNK === 0 || ty % CHUNK === 0) {
+            ctx.setLineDash([9, 9]); ctx.beginPath();
+            if (tx % CHUNK === 0) { ctx.moveTo(x + TILE / 2, y); ctx.lineTo(x + TILE / 2, y + TILE); }
+            else { ctx.moveTo(x, y + TILE / 2); ctx.lineTo(x + TILE, y + TILE / 2); }
+            ctx.stroke(); ctx.setLineDash([]);
+          }
+        } else if (type === 'building') {
+          ctx.fillStyle = '#b46b4d'; ctx.fillRect(x + 2, y + 3, TILE - 4, TILE - 5);
+          ctx.fillStyle = '#7c422f'; ctx.fillRect(x + 4, y + 5, TILE - 8, 8);
+          ctx.fillStyle = '#d7bb80';
+          ctx.fillRect(x + 10, y + 21, 8, 9); ctx.fillRect(x + 29, y + 21, 8, 9);
+          ctx.strokeStyle = '#683e30'; ctx.strokeRect(x + 2, y + 3, TILE - 4, TILE - 5);
+        } else if (type === 'workshop') {
+          ctx.fillStyle = '#d37632'; ctx.fillRect(x + 1, y + 2, TILE - 2, TILE - 3);
+          ctx.fillStyle = '#34281c'; ctx.fillRect(x + 6, y + 20, TILE - 12, TILE - 16);
+          ctx.fillStyle = '#ffce54'; ctx.font = 'bold 10px DM Sans'; ctx.fillText('FIX', x + 12, y + 15);
+        } else if (type === 'plaza') {
+          ctx.fillStyle = '#9fa69a'; ctx.fillRect(x, y, TILE + 1, TILE + 1);
+          ctx.fillStyle = '#5d8c69'; ctx.beginPath(); ctx.arc(x + 24, y + 24, 11, 0, Math.PI * 2); ctx.fill();
+        } else {
+          ctx.fillStyle = '#426443'; ctx.fillRect(x, y, TILE + 1, TILE + 1);
+          const h = hash(tx * 17, ty * 31);
+          if (h > .67) { ctx.fillStyle = '#315334'; ctx.beginPath(); ctx.arc(x + 17, y + 16, 8, 0, Math.PI * 2); ctx.fill(); }
+        }
+      }
+      function drawCollectible(tx, ty) {
+        const id = tx + ':' + ty;
+        if (state.collected.has(id) || hash(tx * 11, ty * 9) < .86 || isRoad(tx, ty) || tileType(tx,ty) === 'building') return;
+        const x = tx * TILE - camera.x + canvas.width / 2 + TILE / 2;
+        const y = ty * TILE - camera.y + canvas.height / 2 + TILE / 2;
+        ctx.fillStyle = '#d5ff42'; ctx.fillRect(x - 7, y - 7, 14, 14);
+        ctx.strokeStyle = '#172517'; ctx.lineWidth = 2; ctx.strokeRect(x - 7, y - 7, 14, 14);
+        if (Math.hypot(player.x - tx*TILE - TILE/2, player.y - ty*TILE - TILE/2) < 22) {
+          state.collected.add(id);
+          const slot = Math.floor(hash(tx, ty) * 4);
+          state.inventory[slot]++;
+          state.money += 15;
+          state.missions.supplies = Math.min(3, state.missions.supplies + 1);
+          showToast('+15 sats · suprimento recolhido');
+          updateUI();
+        }
+      }
+      function drawWorld() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        const startX = Math.floor((camera.x - canvas.width/2) / TILE) - 1;
+        const endX = Math.ceil((camera.x + canvas.width/2) / TILE) + 1;
+        const startY = Math.floor((camera.y - canvas.height/2) / TILE) - 1;
+        const endY = Math.ceil((camera.y + canvas.height/2) / TILE) + 1;
+        for (let ty = startY; ty <= endY; ty++) for (let tx = startX; tx <= endX; tx++) drawTile(tx, ty);
+        for (let ty = startY; ty <= endY; ty++) for (let tx = startX; tx <= endX; tx++) drawCollectible(tx, ty);
+
+        const px = canvas.width / 2, py = canvas.height / 2;
+        ctx.fillStyle = 'rgba(0,0,0,.28)'; ctx.beginPath(); ctx.ellipse(px, py + 13, 16, 7, 0, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#d5ff42'; ctx.beginPath(); ctx.arc(px, py, 13, 0, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#172517'; ctx.beginPath(); ctx.arc(px, py - 3, 6, Math.PI, Math.PI*2); ctx.fill();
+        ctx.fillStyle = '#ff914d'; ctx.fillRect(px - 10, py + 2, 20, 7);
+      }
+      function resize() {
+        const ratio = Math.min(window.devicePixelRatio || 1, 2);
+        canvas.width = Math.floor(window.innerWidth * ratio);
+        canvas.height = Math.floor(window.innerHeight * ratio);
+        canvas.style.width = window.innerWidth + 'px'; canvas.style.height = window.innerHeight + 'px';
+        ctx.scale(ratio, ratio);
+        canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+      }
+      function updateUI() {
+        document.getElementById('money-value').textContent = state.money;
+        document.getElementById('wallet-money').textContent = state.money;
+        state.inventory.forEach((count, i) => document.getElementById('slot-count-' + i).textContent = count);
+        document.querySelectorAll('.hotbar-slot').forEach(el => el.classList.toggle('active', Number(el.dataset.slot) === state.activeSlot));
+        const progress = state.missions.supplies;
+        document.getElementById('mission-progress').style.width = (progress / 3 * 100) + '%';
+        document.getElementById('mission-progress-label').textContent = progress + ' / 3 suprimentos';
+        document.getElementById('coordinate-value').textContent = Math.floor(player.x / TILE) + ', ' + Math.floor(player.y / TILE);
+        document.getElementById('map-player').style.left = (42 + (player.x % WORLD_CHUNK_PX) / WORLD_CHUNK_PX * 25) + '%';
+        document.getElementById('map-player').style.top = (38 + (player.y % WORLD_CHUNK_PX) / WORLD_CHUNK_PX * 26) + '%';
+      }
+      function showToast(message) {
+        const toast = document.getElementById('toast');
+        toast.textContent = message; toast.classList.add('show');
+        clearTimeout(toastTimer); toastTimer = setTimeout(() => toast.classList.remove('show'), 2200);
+      }
+      function interact() {
+        if (nearWorkshop) showToast('Oficina Thrnd: diagnóstico concluído. Tudo pronto para rodar.');
+        else showToast('Nenhum ponto de interação próximo. Procure o ícone FIX.');
+      }
+      function update(dt) {
+        let mx = (keys.ArrowRight || keys.d ? 1 : 0) - (keys.ArrowLeft || keys.a ? 1 : 0) + joystick.x;
+        let my = (keys.ArrowDown || keys.s ? 1 : 0) - (keys.ArrowUp || keys.w ? 1 : 0) + joystick.y;
+        const length = Math.hypot(mx, my);
+        if (length > 1) { mx /= length; my /= length; }
+        const nx = player.x + mx * player.speed * dt, ny = player.y + my * player.speed * dt;
+        if (canMove(nx, player.y)) player.x = nx;
+        if (canMove(player.x, ny)) player.y = ny;
+        camera.x += (player.x - camera.x) * Math.min(1, dt * 8);
+        camera.y += (player.y - camera.y) * Math.min(1, dt * 8);
+        const cx = Math.floor(player.x / WORLD_CHUNK_PX), cy = Math.floor(player.y / WORLD_CHUNK_PX);
+        state.visited.add(chunkKey(cx,cy));
+        const tx = Math.floor(player.x/TILE), ty = Math.floor(player.y/TILE);
+        nearWorkshop = [[0,0],[1,0],[-1,0],[0,1],[0,-1]].some(([a,b]) => tileType(tx+a,ty+b) === 'workshop');
+        document.getElementById('objective-card').style.borderColor = nearWorkshop ? '#ff914d' : '';
+        updateUI();
+      }
+      function loop(time) {
+        const dt = Math.min(.04, (time-lastTime)/1000); lastTime = time;
+        update(dt); drawWorld(); requestAnimationFrame(loop);
+      }
+
+      async function saveGame() {
+        const button = document.getElementById('save-button');
+        const status = document.getElementById('save-status');
+        button.disabled = true; button.style.opacity = '.65'; status.textContent = 'Salvando no Canva Sheet...';
+        const record = {
+          player_x: Math.round(player.x), player_y: Math.round(player.y), money: state.money,
+          inventory: JSON.stringify(state.inventory), missions: JSON.stringify(state.missions),
+          visited_chunks: JSON.stringify([...state.visited].slice(-200))
+        };
+        const result = state.saveRecord ? await window.dataSdk.update({...record, __backendId: state.saveRecord.__backendId}) : await window.dataSdk.create(record);
+        button.disabled = false; button.style.opacity = '1';
+        if (result.isOk) { status.textContent = 'Progresso salvo com sucesso.'; showToast('Cidade salva no Canva Sheet.'); }
+        else status.textContent = 'Não foi possível salvar agora. Tente novamente.';
+      }
+      const dataHandler = {
+        onDataChanged(data) {
+          if (!state.loaded && data.length) {
+            const record = data[0]; state.saveRecord = record; state.loaded = true;
+            player.x = Number(record.player_x) || player.x; player.y = Number(record.player_y) || player.y;
+            state.money = Number(record.money) || 0;
+            try { state.inventory = JSON.parse(record.inventory) || state.inventory; state.missions = JSON.parse(record.missions) || state.missions; state.visited = new Set(JSON.parse(record.visited_chunks) || []); } catch (e) {}
+            showToast('Progresso da cidade carregado.');
+          } else if (data.length) state.saveRecord = data[0];
+          updateUI();
+        }
+      };
+
+      document.addEventListener('keydown', e => {
+        keys[e.key] = true;
+        if (['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key)) e.preventDefault();
+        if (e.key.toLowerCase() === 'e') interact();
+        if (e.key.toLowerCase() === 'm') togglePhone();
+        if (/^[1-4]$/.test(e.key)) { state.activeSlot = Number(e.key)-1; updateUI(); }
+      });
+      document.addEventListener('keyup', e => keys[e.key] = false);
+      document.getElementById('interact-button').addEventListener('click', interact);
+      document.getElementById('phone-toggle').addEventListener('click', togglePhone);
+      document.getElementById('phone-close').addEventListener('click', togglePhone);
+      document.getElementById('save-button').addEventListener('click', saveGame);
+
+      function togglePhone() { document.getElementById('phone').classList.toggle('open'); }
+      document.querySelectorAll('[data-app]').forEach(button => button.addEventListener('click', () => {
+        document.querySelectorAll('[data-app]').forEach(b => b.classList.toggle('active', b === button));
+        document.querySelectorAll('.phone-panel').forEach(panel => panel.classList.toggle('active', panel.id === 'panel-' + button.dataset.app));
+      }));
+      document.querySelectorAll('.hotbar-slot').forEach(el => el.addEventListener('click', () => { state.activeSlot = Number(el.dataset.slot); updateUI(); }));
+
+      const base = document.getElementById('joystick-base'), knob = document.getElementById('joystick-knob');
+      function moveStick(e) {
+        const rect = base.getBoundingClientRect(), touch = e.touches ? e.touches[0] : e;
+        let x = touch.clientX - rect.left - rect.width/2, y = touch.clientY - rect.top - rect.height/2;
+        const distance = Math.hypot(x,y), max = 30;
+        if (distance > max) { x = x/distance*max; y = y/distance*max; }
+        knob.style.transform = `translate(${x}px, ${y}px)`; joystick.x = x/max; joystick.y = y/max;
+      }
+      base.addEventListener('pointerdown', e => { joystick.active = true; base.setPointerCapture(e.pointerId); moveStick(e); });
+      base.addEventListener('pointermove', e => { if (joystick.active) moveStick(e); });
+      function releaseStick() { joystick.active=false; joystick.x=0; joystick.y=0; knob.style.transform='translate(0,0)'; }
+      base.addEventListener('pointerup', releaseStick); base.addEventListener('pointercancel', releaseStick);
+
+      window.addEventListener('resize', resize);
+      resize(); lucide.createIcons(); updateUI();
+      window.dataSdk.init(dataHandler).then(result => {
+        if (!result.isOk) document.getElementById('save-status').textContent = 'O salvamento está indisponível no momento.';
+      });
+      requestAnimationFrame(loop);
+    })();
+  </script>
+ </body>
+</html>
