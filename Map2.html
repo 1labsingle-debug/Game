@@ -1,0 +1,1301 @@
+```html
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+<title>Moto City — Mapa 2D</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    font-family: Arial, Helvetica, sans-serif;
+    background: #10151b;
+    color: #fff;
+    touch-action: none;
+}
+
+/* =========================
+   JOGO
+========================= */
+
+#game {
+    position: relative;
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background: #77a85a;
+}
+
+/* =========================
+   CÉU / AMBIENTE
+========================= */
+
+.sky {
+    position: absolute;
+    inset: 0 0 55% 0;
+    background: linear-gradient(
+        #8fd3ff,
+        #bde9ff
+    );
+    z-index: 0;
+}
+
+.sun {
+    position: absolute;
+    width: 70px;
+    height: 70px;
+    right: 10%;
+    top: 9%;
+    border-radius: 50%;
+    background: #ffe58a;
+    box-shadow: 0 0 40px rgba(255, 229, 138, .7);
+}
+
+/* =========================
+   MUNDO
+========================= */
+
+#world {
+    position: absolute;
+    width: 1800px;
+    height: 1200px;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    transition: transform .08s linear;
+}
+
+/* chão */
+
+.ground {
+    position: absolute;
+    inset: 0;
+    background:
+        linear-gradient(
+            135deg,
+            rgba(255,255,255,.03) 25%,
+            transparent 25%
+        ),
+        #75a95a;
+}
+
+/* =========================
+   AVENIDAS
+========================= */
+
+.road {
+    position: absolute;
+    background: #41484e;
+    box-shadow:
+        inset 0 0 0 5px #33393e;
+}
+
+.road.horizontal {
+    width: 1800px;
+    height: 190px;
+    left: 0;
+    top: 515px;
+}
+
+.road.vertical {
+    width: 190px;
+    height: 1200px;
+    left: 805px;
+    top: 0;
+}
+
+/* faixas */
+
+.road.horizontal::after {
+    content: "";
+    position: absolute;
+    left: 0;
+    top: 92px;
+    width: 100%;
+    height: 6px;
+    background: repeating-linear-gradient(
+        to right,
+        #f6d96a 0 45px,
+        transparent 45px 85px
+    );
+}
+
+.road.vertical::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 92px;
+    width: 6px;
+    height: 100%;
+    background: repeating-linear-gradient(
+        to bottom,
+        #f6d96a 0 45px,
+        transparent 45px 85px
+    );
+}
+
+/* =========================
+   PRAÇA
+========================= */
+
+.building,
+.location {
+    position: absolute;
+}
+
+.square {
+    left: 180px;
+    top: 260px;
+    width: 420px;
+    height: 360px;
+    border-radius: 25px;
+    background: #67994d;
+    border: 8px solid #547f42;
+    box-shadow: 0 15px 0 rgba(0,0,0,.12);
+}
+
+.square-title {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,.55);
+    padding: 8px 18px;
+    border-radius: 20px;
+    font-size: 16px;
+    font-weight: bold;
+}
+
+/* bancos */
+
+.bench {
+    position: absolute;
+    width: 70px;
+    height: 18px;
+    background: #754c2b;
+    border-radius: 5px;
+}
+
+.bench::before,
+.bench::after {
+    content: "";
+    position: absolute;
+    width: 7px;
+    height: 25px;
+    bottom: -18px;
+    background: #3c2b20;
+}
+
+.bench::before {
+    left: 10px;
+}
+
+.bench::after {
+    right: 10px;
+}
+
+/* árvore */
+
+.tree {
+    position: absolute;
+    width: 55px;
+    height: 55px;
+    border-radius: 50%;
+    background: #32733b;
+    box-shadow:
+        inset -8px -8px 0 rgba(0,0,0,.12),
+        0 10px 0 rgba(0,0,0,.12);
+}
+
+.tree::after {
+    content: "";
+    position: absolute;
+    width: 14px;
+    height: 35px;
+    left: 20px;
+    top: 43px;
+    background: #6b4329;
+    z-index: -1;
+}
+
+/* =========================
+   PRÉDIOS
+========================= */
+
+.building {
+    width: 190px;
+    height: 145px;
+    border-radius: 12px;
+    border: 6px solid rgba(0,0,0,.18);
+    box-shadow: 0 12px 0 rgba(0,0,0,.12);
+}
+
+.building-label {
+    position: absolute;
+    bottom: -34px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+    background: rgba(0,0,0,.7);
+    padding: 6px 12px;
+    border-radius: 15px;
+    font-size: 13px;
+    font-weight: bold;
+}
+
+/* oficina */
+
+.workshop {
+    left: 1110px;
+    top: 350px;
+    background: #a84f35;
+}
+
+.workshop .roof {
+    position: absolute;
+    width: 210px;
+    height: 35px;
+    left: -16px;
+    top: -30px;
+    background: #632d24;
+    transform: skewX(-20deg);
+    border-radius: 8px;
+}
+
+.workshop .door {
+    position: absolute;
+    width: 70px;
+    height: 85px;
+    left: 58px;
+    bottom: 0;
+    background: #24282c;
+    border: 5px solid #171a1d;
+}
+
+.workshop .sign {
+    position: absolute;
+    top: 15px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #ffd34f;
+    color: #181818;
+    padding: 5px 12px;
+    border-radius: 5px;
+    font-size: 12px;
+    font-weight: 900;
+}
+
+/* loja */
+
+.parts-store {
+    left: 1150px;
+    top: 80px;
+    background: #496e9d;
+}
+
+.parts-store .window {
+    position: absolute;
+    width: 55px;
+    height: 45px;
+    left: 18px;
+    bottom: 20px;
+    background: #9bd9ed;
+    border: 5px solid #273d59;
+}
+
+.parts-store .window:nth-child(2) {
+    left: 110px;
+}
+
+/* posto */
+
+.gas {
+    left: 1400px;
+    top: 760px;
+    background: #d65d4a;
+}
+
+.gas .pump {
+    position: absolute;
+    width: 25px;
+    height: 65px;
+    background: #eeeeee;
+    bottom: 15px;
+    left: 30px;
+}
+
+.gas .pump:nth-child(2) {
+    left: 125px;
+}
+
+/* skate */
+
+.skate {
+    left: 180px;
+    top: 770px;
+    width: 330px;
+    height: 220px;
+    border-radius: 25px;
+    background: #b5b5b5;
+    border: 8px solid #8b8b8b;
+    box-shadow: 0 12px 0 rgba(0,0,0,.12);
+}
+
+.ramp {
+    position: absolute;
+    width: 100px;
+    height: 55px;
+    background: #676767;
+    bottom: 30px;
+    border-radius: 60px 60px 0 0;
+}
+
+.ramp.one {
+    left: 30px;
+}
+
+.ramp.two {
+    right: 30px;
+}
+
+/* =========================
+   PISTA
+========================= */
+
+.track {
+    position: absolute;
+    left: 980px;
+    top: 800px;
+    width: 350px;
+    height: 260px;
+    border: 45px solid #3b3f42;
+    border-radius: 50%;
+    background: #76a557;
+}
+
+.track::after {
+    content: "🏁";
+    position: absolute;
+    left: 120px;
+    top: 75px;
+    font-size: 45px;
+}
+
+/* =========================
+   MOTOS ESTACIONADAS
+========================= */
+
+.moto {
+    position: absolute;
+    font-size: 42px;
+    filter: drop-shadow(0 8px 2px rgba(0,0,0,.2));
+}
+
+/* =========================
+   PLAYER
+========================= */
+
+#player {
+    position: absolute;
+    width: 60px;
+    height: 80px;
+    left: 870px;
+    top: 560px;
+    z-index: 20;
+    transition: left .08s linear, top .08s linear;
+}
+
+.player-shadow {
+    position: absolute;
+    width: 45px;
+    height: 14px;
+    left: 7px;
+    bottom: 4px;
+    border-radius: 50%;
+    background: rgba(0,0,0,.25);
+}
+
+.player-body {
+    position: absolute;
+    left: 17px;
+    top: 24px;
+    width: 27px;
+    height: 40px;
+    background: #2f6ee4;
+    border-radius: 12px 12px 8px 8px;
+}
+
+.player-head {
+    position: absolute;
+    left: 15px;
+    top: 5px;
+    width: 31px;
+    height: 31px;
+    border-radius: 50%;
+    background: #f0b48b;
+    border: 4px solid #252525;
+}
+
+.player-head::before {
+    content: "";
+    position: absolute;
+    width: 34px;
+    height: 12px;
+    left: -5px;
+    top: -5px;
+    background: #20252b;
+    border-radius: 15px 15px 5px 5px;
+}
+
+/* =========================
+   HUD
+========================= */
+
+#hud {
+    position: fixed;
+    z-index: 100;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    pointer-events: none;
+}
+
+.hud-box {
+    background: rgba(15,18,22,.85);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 16px;
+    padding: 9px 13px;
+    box-shadow: 0 5px 15px rgba(0,0,0,.25);
+}
+
+.logo {
+    font-size: 17px;
+    font-weight: 900;
+}
+
+.stats {
+    display: flex;
+    gap: 8px;
+}
+
+.stat {
+    font-size: 13px;
+}
+
+/* =========================
+   CONTROLES
+========================= */
+
+#controls {
+    position: fixed;
+    z-index: 100;
+    left: 18px;
+    bottom: 20px;
+    width: 150px;
+    height: 150px;
+}
+
+.joystick {
+    position: absolute;
+    width: 145px;
+    height: 145px;
+    border-radius: 50%;
+    background: rgba(20,25,30,.45);
+    border: 2px solid rgba(255,255,255,.18);
+}
+
+.stick {
+    position: absolute;
+    width: 58px;
+    height: 58px;
+    left: 43px;
+    top: 43px;
+    border-radius: 50%;
+    background: rgba(255,255,255,.25);
+    border: 2px solid rgba(255,255,255,.3);
+}
+
+.dir {
+    position: absolute;
+    width: 48px;
+    height: 48px;
+    border: 0;
+    background: transparent;
+    color: white;
+    font-size: 22px;
+}
+
+.up {
+    left: 48px;
+    top: 0;
+}
+
+.down {
+    left: 48px;
+    bottom: 0;
+}
+
+.left {
+    left: 0;
+    top: 48px;
+}
+
+.right {
+    right: 0;
+    top: 48px;
+}
+
+/* =========================
+   BOTÕES
+========================= */
+
+#actions {
+    position: fixed;
+    z-index: 100;
+    right: 18px;
+    bottom: 25px;
+    width: 170px;
+    height: 170px;
+}
+
+.action {
+    position: absolute;
+    width: 65px;
+    height: 65px;
+    border: 0;
+    border-radius: 50%;
+    background: rgba(15,18,22,.8);
+    color: #fff;
+    font-size: 24px;
+    border: 2px solid rgba(255,255,255,.15);
+    box-shadow: 0 5px 15px rgba(0,0,0,.3);
+}
+
+.action:active,
+.dir:active {
+    transform: scale(.92);
+}
+
+.a {
+    right: 0;
+    top: 20px;
+}
+
+.b {
+    left: 0;
+    top: 65px;
+}
+
+.c {
+    right: 0;
+    bottom: 0;
+}
+
+.d {
+    left: 55px;
+    top: 0;
+}
+
+/* =========================
+   INTERAÇÃO
+========================= */
+
+#interaction {
+    position: fixed;
+    z-index: 150;
+    left: 50%;
+    bottom: 210px;
+    transform: translateX(-50%);
+    display: none;
+    background: rgba(12,15,18,.94);
+    padding: 14px 18px;
+    border-radius: 18px;
+    border: 1px solid rgba(255,255,255,.15);
+    text-align: center;
+    min-width: 220px;
+}
+
+#interaction strong {
+    display: block;
+    margin-bottom: 8px;
+}
+
+#interaction button {
+    border: 0;
+    border-radius: 10px;
+    padding: 9px 15px;
+    background: #ffd34f;
+    font-weight: bold;
+}
+
+/* =========================
+   MENU
+========================= */
+
+#menu {
+    position: fixed;
+    z-index: 200;
+    inset: 0;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,.65);
+}
+
+.menu-card {
+    width: min(90%, 420px);
+    padding: 25px;
+    border-radius: 25px;
+    background: #171c21;
+    box-shadow: 0 20px 50px rgba(0,0,0,.5);
+}
+
+.menu-card h2 {
+    margin-bottom: 18px;
+}
+
+.menu-option {
+    width: 100%;
+    margin-top: 10px;
+    padding: 14px;
+    border: 0;
+    border-radius: 12px;
+    background: #252c33;
+    color: white;
+    text-align: left;
+    font-size: 15px;
+}
+
+.close {
+    margin-top: 20px;
+    width: 100%;
+    padding: 12px;
+    border: 0;
+    border-radius: 12px;
+    background: #ffd34f;
+    font-weight: bold;
+}
+
+/* =========================
+   RESPONSIVO
+========================= */
+
+@media (max-width: 600px) {
+
+    #hud {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+    }
+
+    .logo {
+        font-size: 14px;
+    }
+
+    .stat {
+        font-size: 11px;
+    }
+
+    #controls {
+        left: 12px;
+        bottom: 12px;
+        transform: scale(.85);
+        transform-origin: bottom left;
+    }
+
+    #actions {
+        right: 10px;
+        bottom: 10px;
+        transform: scale(.82);
+        transform-origin: bottom right;
+    }
+
+    #interaction {
+        bottom: 185px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <div class="sky"></div>
+    <div class="sun"></div>
+
+    <div id="world">
+
+        <div class="ground"></div>
+
+        <!-- AVENIDAS -->
+        <div class="road horizontal"></div>
+        <div class="road vertical"></div>
+
+        <!-- PRAÇA -->
+        <div class="square">
+            <div class="square-title">🌳 PRAÇA CENTRAL</div>
+
+            <div class="bench" style="left:70px;top:90px;"></div>
+            <div class="bench" style="left:270px;top:90px;"></div>
+            <div class="bench" style="left:70px;top:240px;"></div>
+            <div class="bench" style="left:270px;top:240px;"></div>
+
+            <div class="tree" style="left:170px;top:90px;"></div>
+            <div class="tree" style="left:170px;top:225px;"></div>
+        </div>
+
+        <!-- LOJA DE PEÇAS -->
+        <div class="building parts-store">
+            <div class="building-label">🔩 LOJA DE PEÇAS</div>
+            <div class="window"></div>
+            <div class="window"></div>
+        </div>
+
+        <!-- OFICINA -->
+        <div class="building workshop" id="workshop">
+            <div class="roof"></div>
+            <div class="sign">🏍️ SPEED GARAGE</div>
+            <div class="door"></div>
+            <div class="building-label">🔧 OFICINA DE MOTOS</div>
+        </div>
+
+        <!-- POSTO -->
+        <div class="building gas">
+            <div class="building-label">⛽ POSTO</div>
+            <div class="pump"></div>
+            <div class="pump"></div>
+        </div>
+
+        <!-- SKATE PARK -->
+        <div class="skate">
+            <div class="building-label">🛹 PRAÇA SK8</div>
+            <div class="ramp one"></div>
+            <div class="ramp two"></div>
+        </div>
+
+        <!-- PISTA -->
+        <div class="track">
+            <div class="building-label">🏁 PISTA</div>
+        </div>
+
+        <!-- MOTOS -->
+        <div class="moto" style="left:1040px;top:580px;">🏍️</div>
+        <div class="moto" style="left:1250px;top:570px;">🏍️</div>
+        <div class="moto" style="left:1330px;top:700px;">🛵</div>
+
+        <!-- PLAYER -->
+        <div id="player">
+            <div class="player-shadow"></div>
+            <div class="player-head"></div>
+            <div class="player-body"></div>
+        </div>
+
+    </div>
+
+    <!-- HUD -->
+    <div id="hud">
+
+        <div class="hud-box logo">
+            🏍️ MOTO CITY
+        </div>
+
+        <div class="stats">
+
+            <div class="hud-box stat">
+                💰 <span id="money">2500</span>
+            </div>
+
+            <div class="hud-box stat">
+                ⭐ <span id="rep">1</span>
+            </div>
+
+            <div class="hud-box stat">
+                ☰
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- JOYSTICK -->
+    <div id="controls">
+
+        <div class="joystick"></div>
+
+        <button class="dir up" data-dir="up">▲</button>
+        <button class="dir down" data-dir="down">▼</button>
+        <button class="dir left" data-dir="left">◀</button>
+        <button class="dir right" data-dir="right">▶</button>
+
+        <div class="stick"></div>
+
+    </div>
+
+    <!-- AÇÕES -->
+    <div id="actions">
+
+        <button class="action a" id="actionA">A</button>
+        <button class="action b" id="actionB">B</button>
+        <button class="action c" id="actionC">C</button>
+        <button class="action d" id="actionD">D</button>
+
+    </div>
+
+    <!-- INTERAÇÃO -->
+    <div id="interaction">
+
+        <strong id="interactionTitle">
+            🔧 Oficina
+        </strong>
+
+        <button id="interactionButton">
+            Entrar
+        </button>
+
+    </div>
+
+    <!-- MENU -->
+    <div id="menu">
+
+        <div class="menu-card">
+
+            <h2>🏍️ Moto City</h2>
+
+            <button class="menu-option">
+                🏍️ Minha Moto
+            </button>
+
+            <button class="menu-option">
+                🔧 Oficina
+            </button>
+
+            <button class="menu-option">
+                📋 Missões
+            </button>
+
+            <button class="menu-option">
+                🎒 Inventário
+            </button>
+
+            <button class="menu-option">
+                🎨 Personalizar Personagem
+            </button>
+
+            <button class="close" id="closeMenu">
+                Voltar ao mapa
+            </button>
+
+        </div>
+
+    </div>
+
+</div>
+
+<script>
+
+/* =====================================================
+   ESTADO DO JOGO
+===================================================== */
+
+const game = {
+
+    money: 2500,
+
+    reputation: 1,
+
+    player: {
+        x: 870,
+        y: 560,
+        speed: 5
+    },
+
+    keys: {
+        up: false,
+        down: false,
+        left: false,
+        right: false
+    }
+
+};
+
+
+/* =====================================================
+   ELEMENTOS
+===================================================== */
+
+const world = document.getElementById("world");
+const player = document.getElementById("player");
+
+const interaction = document.getElementById("interaction");
+const interactionTitle = document.getElementById("interactionTitle");
+const interactionButton = document.getElementById("interactionButton");
+
+const menu = document.getElementById("menu");
+
+const moneyElement = document.getElementById("money");
+const repElement = document.getElementById("rep");
+
+
+/* =====================================================
+   MOVIMENTO
+===================================================== */
+
+function movePlayer() {
+
+    let dx = 0;
+    let dy = 0;
+
+    if (game.keys.up) dy -= game.player.speed;
+    if (game.keys.down) dy += game.player.speed;
+    if (game.keys.left) dx -= game.player.speed;
+    if (game.keys.right) dx += game.player.speed;
+
+    game.player.x += dx;
+    game.player.y += dy;
+
+    // limites do mundo
+
+    game.player.x = Math.max(
+        0,
+        Math.min(1740, game.player.x)
+    );
+
+    game.player.y = Math.max(
+        0,
+        Math.min(1140, game.player.y)
+    );
+
+    player.style.left = game.player.x + "px";
+    player.style.top = game.player.y + "px";
+
+    updateCamera();
+    checkInteractions();
+
+    requestAnimationFrame(movePlayer);
+}
+
+
+/* =====================================================
+   CÂMERA
+===================================================== */
+
+function updateCamera() {
+
+    const screenWidth = window.innerWidth;
+    const screenHeight = window.innerHeight;
+
+    let cameraX =
+        screenWidth / 2 -
+        game.player.x -
+        30;
+
+    let cameraY =
+        screenHeight / 2 -
+        game.player.y -
+        40;
+
+    const minX =
+        screenWidth - 1800;
+
+    const minY =
+        screenHeight - 1200;
+
+    cameraX = Math.min(
+        0,
+        Math.max(minX, cameraX)
+    );
+
+    cameraY = Math.min(
+        0,
+        Math.max(minY, cameraY)
+    );
+
+    world.style.transform =
+        `translate(${cameraX}px, ${cameraY}px)`;
+}
+
+
+/* =====================================================
+   INTERAÇÃO COM OFICINA
+===================================================== */
+
+function checkInteractions() {
+
+    const workshopX = 1110;
+    const workshopY = 350;
+
+    const distance = Math.hypot(
+        game.player.x - workshopX,
+        game.player.y - workshopY
+    );
+
+    if (distance < 180) {
+
+        interaction.style.display = "block";
+
+        interactionTitle.textContent =
+            "🔧 SPEED GARAGE";
+
+        interactionButton.textContent =
+            "Entrar na oficina";
+
+    } else {
+
+        interaction.style.display = "none";
+
+    }
+}
+
+
+/* =====================================================
+   ENTRAR NA OFICINA
+===================================================== */
+
+interactionButton.addEventListener(
+    "click",
+    () => {
+
+        alert(
+            "🔧 OFICINA\n\n" +
+            "A tela da oficina será adicionada na próxima etapa.\n\n" +
+            "Aqui vamos colocar:\n" +
+            "🏍️ Moto\n" +
+            "🔧 Diagnóstico\n" +
+            "🛠️ Reparos\n" +
+            "🎨 Customização\n" +
+            "🏁 Teste"
+        );
+
+    }
+);
+
+
+/* =====================================================
+   CONTROLES TOUCH
+===================================================== */
+
+document.querySelectorAll(".dir")
+.forEach(button => {
+
+    const direction =
+        button.dataset.dir;
+
+    button.addEventListener(
+        "pointerdown",
+        e => {
+
+            e.preventDefault();
+
+            game.keys[direction] = true;
+
+        }
+    );
+
+    button.addEventListener(
+        "pointerup",
+        e => {
+
+            e.preventDefault();
+
+            game.keys[direction] = false;
+
+        }
+    );
+
+    button.addEventListener(
+        "pointercancel",
+        () => {
+
+            game.keys[direction] = false;
+
+        }
+    );
+
+    button.addEventListener(
+        "pointerleave",
+        () => {
+
+            game.keys[direction] = false;
+
+        }
+    );
+
+});
+
+
+/* =====================================================
+   TECLADO
+===================================================== */
+
+const keyMap = {
+
+    ArrowUp: "up",
+    w: "up",
+
+    ArrowDown: "down",
+    s: "down",
+
+    ArrowLeft: "left",
+    a: "left",
+
+    ArrowRight: "right",
+    d: "right"
+
+};
+
+window.addEventListener(
+    "keydown",
+    e => {
+
+        const direction =
+            keyMap[e.key];
+
+        if (direction) {
+
+            game.keys[direction] = true;
+
+        }
+
+        if (e.key === "Escape") {
+
+            menu.style.display = "none";
+
+        }
+
+    }
+);
+
+window.addEventListener(
+    "keyup",
+    e => {
+
+        const direction =
+            keyMap[e.key];
+
+        if (direction) {
+
+            game.keys[direction] = false;
+
+        }
+
+    }
+);
+
+
+/* =====================================================
+   BOTÕES DE AÇÃO
+===================================================== */
+
+document.getElementById("actionA")
+.addEventListener("click", () => {
+
+    checkInteractions();
+
+    if (
+        interaction.style.display === "block"
+    ) {
+
+        interactionButton.click();
+
+    }
+
+});
+
+
+document.getElementById("actionB")
+.addEventListener("click", () => {
+
+    alert(
+        "📋 MISSÕES\n\n" +
+        "Nenhuma missão disponível ainda."
+    );
+
+});
+
+
+document.getElementById("actionC")
+.addEventListener("click", () => {
+
+    alert(
+        "🏍️ SUA MOTO\n\n" +
+        "Você ainda precisa comprar sua primeira moto."
+    );
+
+});
+
+
+document.getElementById("actionD")
+.addEventListener("click", () => {
+
+    menu.style.display = "flex";
+
+});
+
+
+/* =====================================================
+   MENU
+===================================================== */
+
+document.getElementById("closeMenu")
+.addEventListener(
+    "click",
+    () => {
+
+        menu.style.display = "none";
+
+    }
+);
+
+
+/* =====================================================
+   RESIZE
+===================================================== */
+
+window.addEventListener(
+    "resize",
+    updateCamera
+);
+
+
+/* =====================================================
+   INICIALIZAÇÃO
+===================================================== */
+
+moneyElement.textContent =
+    game.money;
+
+repElement.textContent =
+    game.reputation;
+
+player.style.left =
+    game.player.x + "px";
+
+player.style.top =
+    game.player.y + "px";
+
+updateCamera();
+
+requestAnimationFrame(movePlayer);
+
+</script>
+
+</body>
+</html>
+```
