@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mapa 2D Isométrico - Web App</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            user-select: none;
+            -webkit-user-select: none;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body, html {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1a1a2e;
+            color: #fff;
+        }
+
+        /* HUD - Barra Superior */
+        #top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 60px;
+            background: rgba(22, 33, 62, 0.85);
+            backdrop-filter: blur(5px);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0 15px;
+            z-index: 10;
+            border-bottom: 2px solid #0f3460;
+        }
+
+        .user-profile {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e94560;
+            border: 2px solid #fff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .stats {
+            display: flex;
+            gap: 15px;
+        }
+
+        .stat-badge {
+            background: rgba(15, 52, 96, 0.9);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .sats { color: #f7931a; font-weight: bold; }
+        .points { color: #4eacc5; font-weight: bold; }
+
+        /* Canvas do Jogo */
+        #gameCanvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        /* HUD - Controles Inferiores */
+        #controls-container {
+            position: absolute;
+            bottom: 20px;
+            left: 0;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            padding: 0 20px;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        /* Joystick Virtual */
+        #joystick-zone {
+            width: 120px;
+            height: 120px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            position: relative;
+            pointer-events: auto;
+            touch-action: none;
+        }
+
+        #joystick-stick {
+            width: 50px;
+            height: 50px;
+            background: rgba(233, 69, 96, 0.8);
+            border-radius: 50%;
+            position: absolute;
+            top: 35px;
+            left: 35px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.5);
+        }
+
+        /* Botões de Ação */
+        #action-buttons {
+            display: grid;
+            grid-template-columns: repeat(2, 60px);
+            gap: 10px;
+            pointer-events: auto;
+        }
+
+        .btn-action {
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            border: none;
+            color: #fff;
+            font-weight: bold;
+            font-size: 18px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .btn-action:active { transform: scale(0.95); }
+        .btn-a { background: #2ec4b6; }
+        .btn-b { background: #e71d36; }
+        .btn-c { background: #ff9f1c; }
+        .btn-d { background: #70163c; }
+
+        /* Modal Popups */
+        .modal {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #16213e;
+            border: 2px solid #e94560;
+            padding: 20px;
+            border-radius: 12px;
+            z-index: 20;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 10px 25px rgba(0,0,0,0.7);
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            padding-bottom: 10px;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .btn-menu {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            background: #0f3460;
+            border: 1px solid #e94560;
+            color: white;
+            border-radius: 6px;
+            cursor: pointer;
+            text-align: left;
+        }
+
+        .btn-menu:hover { background: #e94560; }
+    </style>
+</head>
+<body>
+
+    <!-- Barra Superior (HUD) -->
+    <div id="top-bar">
+        <div class="user-profile">
+            <div class="avatar" id="avatarIcon">SK8</div>
+            <div>
+                <div style="font-weight: bold; font-size: 14px;">Skatista_01</div>
+                <div style="font-size: 11px; color: #aaa;">Nível 5</div>
+            </div>
+        </div>
+        <div class="stats">
+            <div class="stat-badge"><span class="sats">⚡ <span id="satsVal">1250</span></span></div>
+            <div class="stat-badge"><span class="points">★ <span id="ptsVal">450</span></span></div>
+        </div>
+    </div>
+
+    <!-- Canvas Principal -->
+    <canvas id="gameCanvas"></canvas>
+
+    <!-- Controles Inferiores (HUD) -->
+    <div id="controls-container">
+        <div id="joystick-zone">
+            <div id="joystick-stick"></div>
+        </div>
+
+        <div id="action-buttons">
+            <button class="btn-action btn-a" onclick="interact()">A</button>
+            <button class="btn-action btn-b" onclick="triggerAction('Manobra')">B</button>
+            <button class="btn-action btn-c" onclick="triggerAction('Sprint')">C</button>
+            <button class="btn-action btn-d" onclick="triggerAction('Emote')">D</button>
+        </div>
+    </div>
+
+    <!-- Modais de Interação -->
+    <div id="modal" class="modal">
+        <div class="modal-header">
+            <h3 id="modalTitle">Título Ponto</h3>
+            <button class="modal-close" onclick="closeModal()">&times;</button>
+        </div>
+        <div id="modalBody">
+            <!-- Conteúdo dinâmico -->
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Ajustar Canvas à janela
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Estado do Jogador
+        const player = {
+            gridX: 0,
+            gridY: 0,
+            speed: 0.05
+        };
+
+        // Pontos de Interação no Mapa Isométrico
+        const mapPoints = [
+            { name: "Vestiário (Personalizar)", gridX: -2, gridY: -2, color: "#e71d36", type: "custom" },
+            { name: "Praça Sk8 (Bancos & Pista)", gridX: -3, gridY: 2, color: "#2ec4b6", type: "skate" },
+            { name: "Área de Eventos (Thrnd & Ads)", gridX: 3, gridY: -3, color: "#ff9f1c", type: "events" },
+            { name: "Pontos Comerciais", gridX: 3, gridY: 2, color: "#a06cd5", type: "shops" },
+            { name: "Sede ADM (SAC/B.A.Byte)", gridX: -1, gridY: 4, color: "#00bbf9", type: "adm" },
+            { name: "Ponte (Próximo Mapa)", gridX: 0, gridY: -5, color: "#f15bb5", type: "bridge" }
+        ];
+
+        // Conversão Isométrica (Grid 2D -> Tela)
+        const TILE_WIDTH = 80;
+        const TILE_HEIGHT = 40;
+
+        function toIso(gridX, gridY) {
+            const screenX = canvas.width / 2 + (gridX - gridY) * (TILE_WIDTH / 2);
+            const screenY = canvas.height / 2 + (gridX + gridY) * (TILE_HEIGHT / 2);
+            return { x: screenX, y: screenY };
+        }
+
+        // Loop de Renderização do Gráfico
+        function drawMap() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Desenhar Grid Isométrico Base (Avenida/Estrutura)
+            for (let x = -6; x <= 6; x++) {
+                for (let y = -6; y <= 6; y++) {
+                    const pos = toIso(x, y);
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(pos.x, pos.y);
+                    ctx.lineTo(pos.x + TILE_WIDTH / 2, pos.y + TILE_HEIGHT / 2);
+                    ctx.lineTo(pos.x, pos.y + TILE_HEIGHT);
+                    ctx.lineTo(pos.x - TILE_WIDTH / 2, pos.y + TILE_HEIGHT / 2);
+                    ctx.closePath();
+                    
+                    ctx.strokeStyle = "rgba(255, 255, 255, 0.05)";
+                    ctx.stroke();
+
+                    // Destaque para Avenida Principal (Diagonal)
+                    if (x === 0) {
+                        ctx.fillStyle = "rgba(50, 50, 70, 0.6)";
+                        ctx.fill();
+                    }
+                }
+            }
+
+            // Desenhar Pontos de Interação (Prédios/Locais)
+            mapPoints.forEach(pt => {
+                const pos = toIso(pt.gridX, pt.gridY);
+                
+                // Base do Prédio
+                ctx.fillStyle = pt.color;
+                ctx.beginPath();
+                ctx.moveTo(pos.x, pos.y - 20);
+                ctx.lineTo(pos.x + 30, pos.y);
+                ctx.lineTo(pos.x, pos.y + 20);
+                ctx.lineTo(pos.x - 30, pos.y);
+                ctx.closePath();
+                ctx.fill();
+
+                // Altura do Bloco 3D
+                ctx.fillStyle = "rgba(0,0,0,0.3)";
+                ctx.fillRect(pos.x - 30, pos.y, 60, 20);
+
+                // Rótulo do Ponto
+                ctx.fillStyle = "#fff";
+                ctx.font = "11px Arial";
+                ctx.textAlign = "center";
+                ctx.fillText(pt.name, pos.x, pos.y - 30);
+            });
+
+            // Desenhar Jogador
+            const playerPos = toIso(player.gridX, player.gridY);
+            ctx.fillStyle = "#e94560";
+            ctx.beginPath();
+            ctx.arc(playerPos.x, playerPos.y + 10, 10, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = "#fff";
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            requestAnimationFrame(drawMap);
+        }
+
+        drawMap();
+
+        // Lógica do Joystick Virtual
+        const joyZone = document.getElementById('joystick-zone');
+        const joyStick = document.getElementById('joystick-stick');
+        let isDragging = false;
+        let joyVector = { x: 0, y: 0 };
+
+        function handleMove(clientX, clientY) {
+            const rect = joyZone.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+
+            let deltaX = clientX - centerX;
+            let deltaY = clientY - centerY;
+            const distance = Math.min(Math.hypot(deltaX, deltaY), 40);
+            const angle = Math.atan2(deltaY, deltaX);
+
+            const moveX = Math.cos(angle) * distance;
+            const moveY = Math.sin(angle) * distance;
+
+            joyStick.style.transform = `translate(${moveX}px, ${moveY}px)`;
+            
+            // Atualiza vetor de velocidade (-1 a 1)
+            joyVector.x = moveX / 40;
+            joyVector.y = moveY / 40;
+        }
+
+        joyZone.addEventListener('pointerdown', (e) => {
+            isDragging = true;
+            handleMove(e.clientX, e.clientY);
+        });
+
+        window.addEventListener('pointermove', (e) => {
+            if (isDragging) handleMove(e.clientX, e.clientY);
+        });
+
+        window.addEventListener('pointerup', () => {
+            if (isDragging) {
+                isDragging = false;
+                joyStick.style.transform = `translate(0px, 0px)`;
+                joyVector = { x: 0, y: 0 };
+            }
+        });
+
+        // Loop de Atualização de Posição
+        setInterval(() => {
+            if (joyVector.x !== 0 || joyVector.y !== 0) {
+                player.gridX += (joyVector.x + joyVector.y) * player.speed;
+                player.gridY += (joyVector.y - joyVector.x) * player.speed;
+            }
+        }, 1000 / 60);
+
+        // Sistema de Interação (Botão A)
+        function interact() {
+            // Encontra ponto de interação mais próximo
+            let nearest = null;
+            let minDist = 1.2; // Raio de proximidade
+
+            mapPoints.forEach(pt => {
+                const dist = Math.hypot(player.gridX - pt.gridX, player.gridY - pt.gridY);
+                if (dist < minDist) {
+                    minDist = dist;
+                    nearest = pt;
+                }
+            });
+
+            if (nearest) {
+                openModal(nearest);
+            } else {
+                alert("Aproxime-se de um ponto de interesse no mapa para interagir!");
+            }
+        }
+
+        // Modais e Telas
+        function openModal(point) {
+            const modal = document.getElementById('modal');
+            const title = document.getElementById('modalTitle');
+            const body = document.getElementById('modalBody');
+
+            title.innerText = point.name;
+            body.innerHTML = "";
+
+            if (point.type === 'skate') {
+                body.innerHTML = `
+                    <button class="btn-menu">🎮 Banco da Praça (Jogos: Jogo da Velha, Truco, Uno, Dama, Dominó)</button>
+                    <button class="btn-menu">🛹 Praticar Skate</button>
+                    <button class="btn-menu">🏆 Ver Ranking</button>
+                    <button class="btn-menu">🎯 Desafios Diários</button>
+                `;
+            } else if (point.type === 'events') {
+                body.innerHTML = `
+                    <button class="btn-menu">🏁 Entrar no Campeonato</button>
+                    <button class="btn-menu">⚡ Acessar Jogos Thrnd (Ganhar Satoshis)</button>
+                    <button class="btn-menu">🎁 Ver Prêmios & Anúncios Locais</button>
+                `;
+            } else if (point.type === 'shops') {
+                body.innerHTML = `
+                    <button class="btn-menu">🥖 Padaria</button>
+                    <button class="btn-menu">🛒 Mercado</button>
+                    <button class="btn-menu">🍔 Lanchonete</button>
+                    <button class="btn-menu">🔧 Oficina de Skates</button>
+                `;
+            } else if (point.type === 'custom') {
+                body.innerHTML = `
+                    <button class="btn-menu">👕 Personalizar Vestuário</button>
+                    <button class="btn-menu">🛹 Trocar Peças do Skate</button>
+                `;
+            } else if (point.type === 'adm') {
+                body.innerHTML = `
+                    <button class="btn-menu">🛎️ Recepção / Informações</button>
+                    <button class="btn-menu">💬 SAC / Suporte</button>
+                    <button class="btn-menu">💻 Central B.A.Byte</button>
+                `;
+            } else if (point.type === 'bridge') {
+                body.innerHTML = `
+                    <p style="margin-bottom:10px;">Deseja viajar para o próximo Bairro/Mapa?</p>
+                    <button class="btn-menu" onclick="alert('Carregando novo mapa...')">🌐 Atravessar Ponte</button>
+                `;
+            }
+
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('modal').style.display = 'none';
+        }
+
+        function triggerAction(actionName) {
+            alert(`Ação acionada: ${actionName}`);
+        }
+    </script>
+</body>
+</html>
