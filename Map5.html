@@ -1,0 +1,3274 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+      content="width=device-width,
+               initial-scale=1,
+               maximum-scale=1,
+               user-scalable=no">
+
+<title>Street Life - Open World</title>
+
+<style>
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    user-select: none;
+    -webkit-user-select: none;
+    -webkit-tap-highlight-color: transparent;
+}
+
+html,
+body {
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background: #111;
+    font-family: Arial, Helvetica, sans-serif;
+}
+
+body {
+    touch-action: none;
+}
+
+/* =========================================================
+   GAME
+========================================================= */
+
+#game {
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    background: #1b1b1b;
+}
+
+canvas {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+}
+
+/* =========================================================
+   HUD
+========================================================= */
+
+#hud {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+}
+
+.topbar {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    right: 12px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+
+    pointer-events: none;
+}
+
+.player-card {
+    background: rgba(15,15,15,.86);
+    border: 1px solid rgba(255,255,255,.12);
+    border-radius: 14px;
+    padding: 9px 12px;
+    color: white;
+    min-width: 150px;
+    box-shadow: 0 8px 25px rgba(0,0,0,.3);
+}
+
+.player-name {
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.player-level {
+    color: #aaa;
+    font-size: 11px;
+    margin-top: 3px;
+}
+
+.money {
+    margin-top: 7px;
+    color: #7df58c;
+    font-weight: bold;
+    font-size: 14px;
+}
+
+.quick-buttons {
+    display: flex;
+    gap: 7px;
+    pointer-events: auto;
+}
+
+.quick-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 13px;
+    border: 1px solid rgba(255,255,255,.13);
+    background: rgba(15,15,15,.88);
+    color: white;
+    font-size: 21px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 8px 25px rgba(0,0,0,.3);
+}
+
+.quick-btn:active {
+    transform: scale(.94);
+}
+
+/* =========================================================
+   JOYSTICK
+========================================================= */
+
+#joystick {
+    position: absolute;
+    left: 24px;
+    bottom: 28px;
+
+    width: 130px;
+    height: 130px;
+
+    border-radius: 50%;
+    background: rgba(255,255,255,.07);
+    border: 2px solid rgba(255,255,255,.15);
+
+    pointer-events: auto;
+}
+
+#joystickKnob {
+    position: absolute;
+
+    width: 58px;
+    height: 58px;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+
+    border-radius: 50%;
+    background: rgba(255,255,255,.25);
+    border: 2px solid rgba(255,255,255,.3);
+
+    box-shadow: 0 8px 20px rgba(0,0,0,.25);
+}
+
+/* =========================================================
+   ACTION BUTTONS
+========================================================= */
+
+.actions {
+    position: absolute;
+    right: 24px;
+    bottom: 28px;
+
+    width: 150px;
+    height: 150px;
+
+    pointer-events: none;
+}
+
+.action {
+    position: absolute;
+
+    width: 58px;
+    height: 58px;
+
+    border-radius: 50%;
+
+    border: 2px solid rgba(255,255,255,.12);
+    background: rgba(15,15,15,.85);
+
+    color: white;
+    font-size: 20px;
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    pointer-events: auto;
+
+    box-shadow: 0 8px 25px rgba(0,0,0,.35);
+}
+
+.action:active {
+    transform: scale(.92);
+}
+
+.action-a {
+    top: 0;
+    right: 45px;
+}
+
+.action-b {
+    left: 0;
+    bottom: 18px;
+}
+
+.action-c {
+    right: 0;
+    bottom: 18px;
+}
+
+.action-d {
+    bottom: 0;
+    right: 45px;
+}
+
+/* =========================================================
+   INTERACTION
+========================================================= */
+
+#interaction {
+    position: absolute;
+    left: 50%;
+    bottom: 105px;
+
+    transform: translateX(-50%);
+
+    display: none;
+
+    background: rgba(10,10,10,.92);
+    color: white;
+
+    border: 1px solid rgba(255,255,255,.14);
+    border-radius: 13px;
+
+    padding: 12px 18px;
+
+    font-size: 13px;
+    font-weight: bold;
+
+    pointer-events: none;
+}
+
+#interaction span {
+    color: #80f58a;
+}
+
+/* =========================================================
+   MODALS
+========================================================= */
+
+.modal {
+    position: absolute;
+    inset: 0;
+
+    display: none;
+    align-items: center;
+    justify-content: center;
+
+    background: rgba(0,0,0,.62);
+
+    pointer-events: auto;
+}
+
+.modal.active {
+    display: flex;
+}
+
+.panel {
+    width: min(92vw, 430px);
+    max-height: 82vh;
+
+    background: #181818;
+
+    border: 1px solid rgba(255,255,255,.13);
+    border-radius: 20px;
+
+    overflow: hidden;
+
+    color: white;
+
+    box-shadow: 0 25px 70px rgba(0,0,0,.55);
+}
+
+.panel-header {
+    padding: 16px;
+
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+
+    border-bottom: 1px solid rgba(255,255,255,.08);
+}
+
+.panel-title {
+    font-size: 17px;
+    font-weight: bold;
+}
+
+.close {
+    width: 34px;
+    height: 34px;
+
+    border: 0;
+    border-radius: 10px;
+
+    background: #292929;
+    color: white;
+
+    font-size: 18px;
+}
+
+/* =========================================================
+   INVENTORY
+========================================================= */
+
+.inventory {
+    padding: 16px;
+}
+
+.inventory-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+}
+
+.slot {
+    aspect-ratio: 1;
+
+    border-radius: 11px;
+
+    background: #232323;
+    border: 1px solid rgba(255,255,255,.08);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    position: relative;
+
+    font-size: 25px;
+}
+
+.slot-count {
+    position: absolute;
+    right: 5px;
+    bottom: 4px;
+
+    font-size: 10px;
+    color: white;
+}
+
+.item-info {
+    margin-top: 15px;
+
+    background: #222;
+    padding: 13px;
+    border-radius: 12px;
+
+    color: #aaa;
+    font-size: 12px;
+}
+
+/* =========================================================
+   PHONE
+========================================================= */
+
+.phone-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    width: 100%;
+    height: 100%;
+}
+
+.phone {
+    width: min(86vw, 330px);
+    height: min(88vh, 650px);
+
+    background: #111;
+
+    border: 5px solid #292929;
+    border-radius: 34px;
+
+    overflow: hidden;
+
+    box-shadow: 0 30px 90px rgba(0,0,0,.7);
+
+    position: relative;
+}
+
+.phone-notch {
+    width: 100px;
+    height: 22px;
+
+    background: #292929;
+
+    border-radius: 0 0 15px 15px;
+
+    position: absolute;
+    left: 50%;
+    top: 0;
+
+    transform: translateX(-50%);
+
+    z-index: 5;
+}
+
+.phone-screen {
+    height: 100%;
+
+    padding: 45px 15px 15px;
+
+    background:
+        linear-gradient(
+            145deg,
+            #17221a,
+            #101410
+        );
+}
+
+.phone-status {
+    display: flex;
+    justify-content: space-between;
+
+    color: white;
+
+    font-size: 11px;
+
+    margin-bottom: 22px;
+}
+
+.phone-clock {
+    font-size: 29px;
+    font-weight: bold;
+
+    color: white;
+}
+
+.phone-date {
+    color: #aaa;
+    margin-top: 3px;
+}
+
+.phone-apps {
+    margin-top: 25px;
+
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 18px 10px;
+}
+
+.app {
+    text-align: center;
+    color: white;
+    font-size: 12px;
+}
+
+.app-icon {
+    width: 56px;
+    height: 56px;
+
+    margin: auto;
+    margin-bottom: 6px;
+
+    border-radius: 16px;
+
+    background: rgba(255,255,255,.1);
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 26px;
+}
+
+.phone-home {
+    position: absolute;
+
+    left: 50%;
+    bottom: 10px;
+
+    transform: translateX(-50%);
+
+    width: 90px;
+    height: 4px;
+
+    border-radius: 5px;
+
+    background: #aaa;
+}
+
+/* =========================================================
+   MAP APP
+========================================================= */
+
+.map-app {
+    padding: 16px;
+}
+
+.mini-map {
+    height: 300px;
+
+    background: #343434;
+
+    border-radius: 15px;
+
+    position: relative;
+
+    overflow: hidden;
+}
+
+.mini-road-h {
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 45%;
+
+    height: 48px;
+
+    background: #222;
+}
+
+.mini-road-v {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 48%;
+
+    width: 48px;
+
+    background: #222;
+}
+
+.mini-player {
+    position: absolute;
+
+    width: 13px;
+    height: 13px;
+
+    background: #ff5a5a;
+
+    border-radius: 50%;
+
+    left: 50%;
+    top: 50%;
+
+    transform: translate(-50%, -50%);
+}
+
+.map-location {
+    position: absolute;
+
+    font-size: 16px;
+}
+
+/* =========================================================
+   MISSION
+========================================================= */
+
+.mission-content {
+    padding: 16px;
+}
+
+.mission-card {
+    background: #222;
+    padding: 15px;
+    border-radius: 13px;
+}
+
+.mission-title {
+    font-weight: bold;
+    font-size: 15px;
+}
+
+.mission-desc {
+    margin-top: 7px;
+    color: #aaa;
+    font-size: 12px;
+    line-height: 1.5;
+}
+
+.mission-reward {
+    margin-top: 12px;
+    color: #7df58c;
+    font-size: 13px;
+}
+
+/* =========================================================
+   WORKSHOP
+========================================================= */
+
+.workshop {
+    padding: 16px;
+}
+
+.workshop-bike {
+    height: 160px;
+
+    border-radius: 15px;
+
+    background:
+        radial-gradient(
+            circle at center,
+            #343434,
+            #202020
+        );
+
+    display: flex;
+    align-items: center;
+    justify-content: center;
+
+    font-size: 80px;
+}
+
+.workshop-buttons {
+    margin-top: 15px;
+
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 9px;
+}
+
+.workshop-button {
+    border: 0;
+
+    background: #262626;
+    color: white;
+
+    padding: 14px;
+
+    border-radius: 11px;
+
+    font-size: 12px;
+}
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+#toast {
+    position: absolute;
+
+    left: 50%;
+    top: 80px;
+
+    transform: translateX(-50%) translateY(-20px);
+
+    background: rgba(10,10,10,.93);
+    color: white;
+
+    padding: 12px 17px;
+
+    border-radius: 12px;
+
+    opacity: 0;
+
+    transition: .25s;
+
+    pointer-events: none;
+
+    font-size: 12px;
+
+    z-index: 50;
+}
+
+#toast.show {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+/* =========================================================
+   RESPONSIVE
+========================================================= */
+
+@media (max-width: 600px) {
+
+    .topbar {
+        top: 8px;
+        left: 8px;
+        right: 8px;
+    }
+
+    .player-card {
+        min-width: 125px;
+    }
+
+    .quick-btn {
+        width: 44px;
+        height: 44px;
+    }
+
+    #joystick {
+        left: 18px;
+        bottom: 20px;
+    }
+
+    .actions {
+        right: 16px;
+        bottom: 20px;
+    }
+
+    #interaction {
+        bottom: 92px;
+    }
+}
+</style>
+</head>
+
+<body>
+
+<div id="game">
+
+    <canvas id="world"></canvas>
+
+    <!-- HUD -->
+    <div id="hud">
+
+        <div class="topbar">
+
+            <div class="player-card">
+                <div class="player-name">Alex</div>
+                <div class="player-level">Nível 1 · Mecânico iniciante</div>
+                <div class="money">
+                    💰 $<span id="money">850</span>
+                </div>
+            </div>
+
+            <div class="quick-buttons">
+
+                <button class="quick-btn"
+                        id="inventoryBtn">
+                    🎒
+                </button>
+
+                <button class="quick-btn"
+                        id="phoneBtn">
+                    📱
+                </button>
+
+            </div>
+
+        </div>
+
+        <!-- INTERACTION -->
+        <div id="interaction">
+            <span>●</span>
+            <span id="interactionText">
+                Interagir
+            </span>
+        </div>
+
+        <!-- JOYSTICK -->
+        <div id="joystick">
+            <div id="joystickKnob"></div>
+        </div>
+
+        <!-- ACTION BUTTONS -->
+        <div class="actions">
+
+            <button class="action action-a"
+                    id="actionA">
+                A
+            </button>
+
+            <button class="action action-b">
+                B
+            </button>
+
+            <button class="action action-c">
+                C
+            </button>
+
+            <button class="action action-d">
+                D
+            </button>
+
+        </div>
+
+        <!-- TOAST -->
+        <div id="toast"></div>
+
+    </div>
+
+
+    <!-- =====================================================
+         INVENTORY
+    ====================================================== -->
+
+    <div class="modal" id="inventoryModal">
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <div class="panel-title">
+                    🎒 Inventário
+                </div>
+
+                <button class="close"
+                        data-close="inventoryModal">
+                    ×
+                </button>
+
+            </div>
+
+            <div class="inventory">
+
+                <div class="inventory-grid"
+                     id="inventoryGrid">
+                </div>
+
+                <div class="item-info">
+                    Os itens encontrados pelo jogador
+                    aparecerão aqui. O sistema já está
+                    preparado para coleta, uso e crafting.
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         PHONE
+    ====================================================== -->
+
+    <div class="modal" id="phoneModal">
+
+        <div class="phone-wrapper">
+
+            <div class="phone">
+
+                <div class="phone-notch"></div>
+
+                <div class="phone-screen">
+
+                    <div class="phone-status">
+
+                        <span>12:43</span>
+
+                        <span>
+                            📶 🔋
+                        </span>
+
+                    </div>
+
+                    <div class="phone-clock">
+                        12:43
+                    </div>
+
+                    <div class="phone-date">
+                        Terça-feira
+                    </div>
+
+                    <div class="phone-apps">
+
+                        <div class="app"
+                             id="phoneMap">
+
+                            <div class="app-icon">
+                                🗺️
+                            </div>
+
+                            Mapa
+
+                        </div>
+
+                        <div class="app"
+                             id="phoneMessages">
+
+                            <div class="app-icon">
+                                💬
+                            </div>
+
+                            Mensagens
+
+                        </div>
+
+                        <div class="app"
+                             id="phoneMissions">
+
+                            <div class="app-icon">
+                                📋
+                            </div>
+
+                            Missões
+
+                        </div>
+
+                        <div class="app">
+
+                            <div class="app-icon">
+                                🏍️
+                            </div>
+
+                            Garagem
+
+                        </div>
+
+                        <div class="app"
+                             id="phoneItems">
+
+                            <div class="app-icon">
+                                🎒
+                            </div>
+
+                            Itens
+
+                        </div>
+
+                        <div class="app">
+
+                            <div class="app-icon">
+                                ⚙️
+                            </div>
+
+                            Config.
+
+                        </div>
+
+                    </div>
+
+                    <div class="phone-home"></div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MAP APP
+    ====================================================== -->
+
+    <div class="modal" id="mapModal">
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <div class="panel-title">
+                    🗺️ Mapa
+                </div>
+
+                <button class="close"
+                        data-close="mapModal">
+                    ×
+                </button>
+
+            </div>
+
+            <div class="map-app">
+
+                <div class="mini-map">
+
+                    <div class="mini-road-h"></div>
+                    <div class="mini-road-v"></div>
+
+                    <div class="map-location"
+                         style="left:18%;top:22%">
+                        🏪
+                    </div>
+
+                    <div class="map-location"
+                         style="left:72%;top:28%">
+                        🔧
+                    </div>
+
+                    <div class="map-location"
+                         style="left:24%;top:73%">
+                        🛹
+                    </div>
+
+                    <div class="map-location"
+                         style="left:75%;top:70%">
+                        ⛽
+                    </div>
+
+                    <div class="mini-player"></div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         MISSION
+    ====================================================== -->
+
+    <div class="modal" id="missionModal">
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <div class="panel-title">
+                    📋 Missões
+                </div>
+
+                <button class="close"
+                        data-close="missionModal">
+                    ×
+                </button>
+
+            </div>
+
+            <div class="mission-content">
+
+                <div class="mission-card">
+
+                    <div class="mission-title">
+                        🔧 A primeira oficina
+                    </div>
+
+                    <div class="mission-desc">
+                        Vá até a oficina e descubra
+                        como funciona o sistema de
+                        manutenção de motos.
+                    </div>
+
+                    <div class="mission-reward">
+                        Recompensa: $250 + XP
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- =====================================================
+         WORKSHOP
+    ====================================================== -->
+
+    <div class="modal" id="workshopModal">
+
+        <div class="panel">
+
+            <div class="panel-header">
+
+                <div class="panel-title">
+                    🔧 Oficina Speed
+                </div>
+
+                <button class="close"
+                        data-close="workshopModal">
+                    ×
+                </button>
+
+            </div>
+
+            <div class="workshop">
+
+                <div class="workshop-bike">
+                    🏍️
+                </div>
+
+                <div class="workshop-buttons">
+
+                    <button class="workshop-button"
+                            onclick="workshopAction('diagnóstico')">
+                        🔍 Diagnóstico
+                    </button>
+
+                    <button class="workshop-button"
+                            onclick="workshopAction('reparo')">
+                        🔧 Reparar
+                    </button>
+
+                    <button class="workshop-button"
+                            onclick="workshopAction('customização')">
+                        🎨 Customizar
+                    </button>
+
+                    <button class="workshop-button"
+                            onclick="workshopAction('teste')">
+                        🏁 Testar
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+
+/* =========================================================
+   CONFIGURAÇÕES DO MUNDO
+========================================================= */
+
+const CONFIG = {
+
+    chunkSize: 1000,
+
+    renderDistance: 2,
+
+    playerSpeed: 190,
+
+    cameraSmooth: 0.12,
+
+    interactionDistance: 90
+
+};
+
+
+/* =========================================================
+   CANVAS
+========================================================= */
+
+const canvas =
+    document.getElementById("world");
+
+const ctx =
+    canvas.getContext("2d");
+
+let width = 0;
+let height = 0;
+
+function resizeCanvas() {
+
+    const dpr =
+        Math.min(window.devicePixelRatio || 1, 2);
+
+    width =
+        window.innerWidth;
+
+    height =
+        window.innerHeight;
+
+    canvas.width =
+        width * dpr;
+
+    canvas.height =
+        height * dpr;
+
+    canvas.style.width =
+        width + "px";
+
+    canvas.style.height =
+        height + "px";
+
+    ctx.setTransform(
+        dpr,
+        0,
+        0,
+        dpr,
+        0,
+        0
+    );
+}
+
+window.addEventListener(
+    "resize",
+    resizeCanvas
+);
+
+resizeCanvas();
+
+
+/* =========================================================
+   GAME STATE
+========================================================= */
+
+const state = {
+
+    money: 850,
+
+    player: {
+
+        x: 0,
+        y: 0,
+
+        radius: 18,
+
+        direction: 0
+
+    },
+
+    camera: {
+
+        x: 0,
+        y: 0
+
+    },
+
+    inventory: [
+
+        {
+            id: "water",
+            name: "Água",
+            icon: "🥤",
+            quantity: 2
+        },
+
+        {
+            id: "wrench",
+            name: "Chave",
+            icon: "🔧",
+            quantity: 1
+        },
+
+        {
+            id: "scrap",
+            name: "Sucata",
+            icon: "🔩",
+            quantity: 3
+        }
+
+    ]
+
+};
+
+
+/* =========================================================
+   INPUT
+========================================================= */
+
+const input = {
+
+    x: 0,
+    y: 0
+
+};
+
+const keys = {};
+
+window.addEventListener(
+    "keydown",
+    e => {
+
+        keys[e.key.toLowerCase()] = true;
+
+    }
+);
+
+window.addEventListener(
+    "keyup",
+    e => {
+
+        keys[e.key.toLowerCase()] = false;
+
+    }
+);
+
+
+/* =========================================================
+   JOYSTICK
+========================================================= */
+
+const joystick =
+    document.getElementById("joystick");
+
+const knob =
+    document.getElementById("joystickKnob");
+
+let joystickActive = false;
+
+let joystickPointer = null;
+
+function updateJoystick(
+    clientX,
+    clientY
+) {
+
+    const rect =
+        joystick.getBoundingClientRect();
+
+    const centerX =
+        rect.left + rect.width / 2;
+
+    const centerY =
+        rect.top + rect.height / 2;
+
+    let dx =
+        clientX - centerX;
+
+    let dy =
+        clientY - centerY;
+
+    const max =
+        rect.width / 2 - 29;
+
+    const distance =
+        Math.sqrt(dx * dx + dy * dy);
+
+    if (distance > max) {
+
+        dx =
+            dx / distance * max;
+
+        dy =
+            dy / distance * max;
+
+    }
+
+    knob.style.transform =
+        `translate(calc(-50% + ${dx}px),
+                   calc(-50% + ${dy}px))`;
+
+    input.x =
+        dx / max;
+
+    input.y =
+        dy / max;
+
+}
+
+joystick.addEventListener(
+    "pointerdown",
+    e => {
+
+        joystickActive = true;
+        joystickPointer = e.pointerId;
+
+        joystick.setPointerCapture(
+            e.pointerId
+        );
+
+        updateJoystick(
+            e.clientX,
+            e.clientY
+        );
+
+    }
+);
+
+joystick.addEventListener(
+    "pointermove",
+    e => {
+
+        if (!joystickActive)
+            return;
+
+        updateJoystick(
+            e.clientX,
+            e.clientY
+        );
+
+    }
+);
+
+function resetJoystick() {
+
+    joystickActive = false;
+
+    input.x = 0;
+    input.y = 0;
+
+    knob.style.transform =
+        "translate(-50%, -50%)";
+
+}
+
+joystick.addEventListener(
+    "pointerup",
+    resetJoystick
+);
+
+joystick.addEventListener(
+    "pointercancel",
+    resetJoystick
+);
+
+
+/* =========================================================
+   KEYBOARD MOVEMENT
+========================================================= */
+
+function keyboardInput() {
+
+    let x = 0;
+    let y = 0;
+
+    if (
+        keys["w"] ||
+        keys["arrowup"]
+    )
+        y -= 1;
+
+    if (
+        keys["s"] ||
+        keys["arrowdown"]
+    )
+        y += 1;
+
+    if (
+        keys["a"] ||
+        keys["arrowleft"]
+    )
+        x -= 1;
+
+    if (
+        keys["d"] ||
+        keys["arrowright"]
+    )
+        x += 1;
+
+    if (x || y) {
+
+        const length =
+            Math.sqrt(
+                x*x + y*y
+            );
+
+        return {
+
+            x: x / length,
+            y: y / length
+
+        };
+
+    }
+
+    return input;
+
+}
+
+
+/* =========================================================
+   CHUNKS
+========================================================= */
+
+const chunks =
+    new Map();
+
+
+function chunkKey(cx, cy) {
+
+    return `${cx},${cy}`;
+
+}
+
+
+function getChunkCoords(
+    x,
+    y
+) {
+
+    return {
+
+        x: Math.floor(
+            x / CONFIG.chunkSize
+        ),
+
+        y: Math.floor(
+            y / CONFIG.chunkSize
+        )
+
+    };
+
+}
+
+
+/* =========================================================
+   DETERMINISTIC RANDOM
+========================================================= */
+
+function seededRandom(
+    seed
+) {
+
+    let value =
+        Math.sin(seed) * 10000;
+
+    return value -
+        Math.floor(value);
+
+}
+
+
+/* =========================================================
+   CHUNK GENERATION
+========================================================= */
+
+function generateChunk(
+    cx,
+    cy
+) {
+
+    const key =
+        chunkKey(cx, cy);
+
+    if (chunks.has(key))
+        return chunks.get(key);
+
+    const chunk = {
+
+        cx,
+        cy,
+
+        objects: []
+
+    };
+
+    const originX =
+        cx * CONFIG.chunkSize;
+
+    const originY =
+        cy * CONFIG.chunkSize;
+
+
+    /*
+       Cada chunk recebe uma
+       configuração determinística.
+    */
+
+    const seed =
+        cx * 928371 +
+        cy * 523971;
+
+
+    /*
+       ESTRADAS
+    */
+
+    const roadWidth = 150;
+
+    const centerX =
+        originX +
+        CONFIG.chunkSize / 2;
+
+    const centerY =
+        originY +
+        CONFIG.chunkSize / 2;
+
+    chunk.road = {
+
+        x:
+            centerX -
+            roadWidth / 2,
+
+        y:
+            centerY -
+            roadWidth / 2,
+
+        width:
+            roadWidth,
+
+        height:
+            roadWidth
+
+    };
+
+
+    /*
+       PRÉDIOS
+    */
+
+    const buildingCount =
+        7 +
+        Math.floor(
+            seededRandom(seed) * 5
+        );
+
+    for (
+        let i = 0;
+        i < buildingCount;
+        i++
+    ) {
+
+        const side =
+            i % 4;
+
+        let x;
+        let y;
+
+        if (side === 0) {
+
+            x =
+                originX +
+                60 +
+                seededRandom(
+                    seed + i * 7
+                ) * 300;
+
+            y =
+                originY +
+                70;
+
+        }
+
+        else if (side === 1) {
+
+            x =
+                originX +
+                600 +
+                seededRandom(
+                    seed + i * 8
+                ) * 250;
+
+            y =
+                originY +
+                70 +
+                seededRandom(
+                    seed + i * 9
+                ) * 300;
+
+        }
+
+        else if (side === 2) {
+
+            x =
+                originX +
+                60 +
+                seededRandom(
+                    seed + i * 11
+                ) * 300;
+
+            y =
+                originY +
+                620;
+
+        }
+
+        else {
+
+            x =
+                originX +
+                70;
+
+            y =
+                originY +
+                500 +
+                seededRandom(
+                    seed + i * 13
+                ) * 250;
+
+        }
+
+        const w =
+            120 +
+            seededRandom(
+                seed + i * 15
+            ) * 100;
+
+        const h =
+            100 +
+            seededRandom(
+                seed + i * 17
+            ) * 120;
+
+        chunk.objects.push({
+
+            type: "building",
+
+            x,
+            y,
+
+            width: w,
+            height: h
+
+        });
+
+    }
+
+
+    /*
+       ÁRVORES
+    */
+
+    for (
+        let i = 0;
+        i < 14;
+        i++
+    ) {
+
+        const x =
+            originX +
+            seededRandom(
+                seed + i * 31
+            ) *
+            CONFIG.chunkSize;
+
+        const y =
+            originY +
+            seededRandom(
+                seed + i * 37
+            ) *
+            CONFIG.chunkSize;
+
+        chunk.objects.push({
+
+            type: "tree",
+
+            x,
+            y,
+
+            radius: 24
+
+        });
+
+    }
+
+
+    /*
+       COLETÁVEIS
+    */
+
+    for (
+        let i = 0;
+        i < 5;
+        i++
+    ) {
+
+        const x =
+            originX +
+            100 +
+            seededRandom(
+                seed + i * 51
+            ) * 800;
+
+        const y =
+            originY +
+            100 +
+            seededRandom(
+                seed + i * 53
+            ) * 800;
+
+        chunk.objects.push({
+
+            type: "collectable",
+
+            id:
+                `scrap-${cx}-${cy}-${i}`,
+
+            x,
+            y,
+
+            radius: 13,
+
+            collected: false
+
+        });
+
+    }
+
+
+    chunks.set(
+        key,
+        chunk
+    );
+
+    return chunk;
+
+}
+
+
+/* =========================================================
+   LOAD CHUNKS
+========================================================= */
+
+function updateChunks() {
+
+    const current =
+        getChunkCoords(
+            state.player.x,
+            state.player.y
+        );
+
+    for (
+        let y =
+            current.y -
+            CONFIG.renderDistance;
+
+        y <=
+            current.y +
+            CONFIG.renderDistance;
+
+        y++
+    ) {
+
+        for (
+            let x =
+                current.x -
+                CONFIG.renderDistance;
+
+            x <=
+                current.x +
+                CONFIG.renderDistance;
+
+            x++
+        ) {
+
+            generateChunk(
+                x,
+                y
+            );
+
+        }
+
+    }
+
+
+    /*
+       Remove chunks muito distantes.
+    */
+
+    for (
+        const [key, chunk]
+        of chunks
+    ) {
+
+        const dx =
+            Math.abs(
+                chunk.cx -
+                current.x
+            );
+
+        const dy =
+            Math.abs(
+                chunk.cy -
+                current.y
+            );
+
+        if (
+            dx >
+            CONFIG.renderDistance + 1
+            ||
+            dy >
+            CONFIG.renderDistance + 1
+        ) {
+
+            chunks.delete(key);
+
+        }
+
+    }
+
+}
+
+
+/* =========================================================
+   SPECIAL LOCATIONS
+========================================================= */
+
+const locations = {
+
+    workshop: {
+
+        x: 380,
+        y: -320,
+
+        width: 180,
+        height: 150,
+
+        name:
+            "Oficina Speed"
+
+    },
+
+    skatepark: {
+
+        x: -450,
+        y: 350,
+
+        width: 260,
+        height: 190
+
+    },
+
+    gasStation: {
+
+        x: 480,
+        y: 430,
+
+        width: 160,
+        height: 120
+
+    }
+
+};
+
+
+/* =========================================================
+   COLLISION
+========================================================= */
+
+function circleRectCollision(
+    cx,
+    cy,
+    radius,
+    rect
+) {
+
+    const nearestX =
+        Math.max(
+            rect.x,
+            Math.min(
+                cx,
+                rect.x + rect.width
+            )
+        );
+
+    const nearestY =
+        Math.max(
+            rect.y,
+            Math.min(
+                cy,
+                rect.y + rect.height
+            )
+        );
+
+    const dx =
+        cx - nearestX;
+
+    const dy =
+        cy - nearestY;
+
+    return (
+        dx * dx +
+        dy * dy
+    ) < radius * radius;
+
+}
+
+
+function collidesWorld(
+    x,
+    y
+) {
+
+    for (
+        const [, chunk]
+        of chunks
+    ) {
+
+        for (
+            const obj
+            of chunk.objects
+        ) {
+
+            if (
+                obj.type ===
+                "building"
+            ) {
+
+                if (
+                    circleRectCollision(
+                        x,
+                        y,
+                        state.player.radius,
+                        obj
+                    )
+                )
+                    return true;
+
+            }
+
+            if (
+                obj.type ===
+                "tree"
+            ) {
+
+                const dx =
+                    x - obj.x;
+
+                const dy =
+                    y - obj.y;
+
+                const distance =
+                    Math.sqrt(
+                        dx*dx +
+                        dy*dy
+                    );
+
+                if (
+                    distance <
+                    state.player.radius +
+                    obj.radius
+                )
+                    return true;
+
+            }
+
+        }
+
+    }
+
+    return false;
+
+}
+
+
+/* =========================================================
+   SPECIAL OBJECTS
+========================================================= */
+
+function drawSpecialLocation(
+    location,
+    icon,
+    label
+) {
+
+    const sx =
+        location.x -
+        state.camera.x +
+        width / 2;
+
+    const sy =
+        location.y -
+        state.camera.y +
+        height / 2;
+
+    ctx.fillStyle =
+        "#292929";
+
+    ctx.fillRect(
+        sx,
+        sy,
+        location.width,
+        location.height
+    );
+
+    ctx.strokeStyle =
+        "rgba(255,255,255,.15)";
+
+    ctx.lineWidth = 3;
+
+    ctx.strokeRect(
+        sx,
+        sy,
+        location.width,
+        location.height
+    );
+
+    ctx.font =
+        "50px Arial";
+
+    ctx.textAlign =
+        "center";
+
+    ctx.textBaseline =
+        "middle";
+
+    ctx.fillText(
+        icon,
+        sx + location.width / 2,
+        sy + location.height / 2
+    );
+
+    ctx.font =
+        "bold 13px Arial";
+
+    ctx.fillStyle =
+        "white";
+
+    ctx.fillText(
+        label,
+        sx + location.width / 2,
+        sy - 14
+    );
+
+}
+
+
+/* =========================================================
+   DRAW WORLD
+========================================================= */
+
+function drawWorld() {
+
+    ctx.clearRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    /*
+       Fundo
+    */
+
+    ctx.fillStyle =
+        "#637557";
+
+    ctx.fillRect(
+        0,
+        0,
+        width,
+        height
+    );
+
+
+    /*
+       CHUNKS
+    */
+
+    for (
+        const [, chunk]
+        of chunks
+    ) {
+
+        const ox =
+            chunk.cx *
+            CONFIG.chunkSize -
+            state.camera.x +
+            width / 2;
+
+        const oy =
+            chunk.cy *
+            CONFIG.chunkSize -
+            state.camera.y +
+            height / 2;
+
+
+        /*
+           Gramado
+        */
+
+        ctx.fillStyle =
+            "#6c815f";
+
+        ctx.fillRect(
+            ox,
+            oy,
+            CONFIG.chunkSize,
+            CONFIG.chunkSize
+        );
+
+
+        /*
+           Estrada horizontal
+        */
+
+        ctx.fillStyle =
+            "#383838";
+
+        ctx.fillRect(
+            ox,
+            oy +
+            CONFIG.chunkSize / 2 -
+            75,
+            CONFIG.chunkSize,
+            150
+        );
+
+
+        /*
+           Estrada vertical
+        */
+
+        ctx.fillRect(
+            ox +
+            CONFIG.chunkSize / 2 -
+            75,
+            oy,
+            150,
+            CONFIG.chunkSize
+        );
+
+
+        /*
+           Faixas
+        */
+
+        ctx.strokeStyle =
+            "#d5c76c";
+
+        ctx.lineWidth = 3;
+
+        ctx.setLineDash([
+            25,
+            20
+        ]);
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            ox,
+            oy +
+            CONFIG.chunkSize / 2
+        );
+
+        ctx.lineTo(
+            ox +
+            CONFIG.chunkSize,
+            oy +
+            CONFIG.chunkSize / 2
+        );
+
+        ctx.moveTo(
+            ox +
+            CONFIG.chunkSize / 2,
+            oy
+        );
+
+        ctx.lineTo(
+            ox +
+            CONFIG.chunkSize / 2,
+            oy +
+            CONFIG.chunkSize
+        );
+
+        ctx.stroke();
+
+        ctx.setLineDash([]);
+
+
+        /*
+           OBJETOS
+        */
+
+        for (
+            const obj
+            of chunk.objects
+        ) {
+
+            const sx =
+                obj.x -
+                state.camera.x +
+                width / 2;
+
+            const sy =
+                obj.y -
+                state.camera.y +
+                height / 2;
+
+
+            if (
+                obj.type ===
+                "building"
+            ) {
+
+                ctx.fillStyle =
+                    "#454545";
+
+                ctx.fillRect(
+                    sx,
+                    sy,
+                    obj.width,
+                    obj.height
+                );
+
+                ctx.fillStyle =
+                    "#686868";
+
+                ctx.fillRect(
+                    sx + 8,
+                    sy + 8,
+                    obj.width - 16,
+                    22
+                );
+
+                ctx.fillStyle =
+                    "#232323";
+
+                for (
+                    let wx = sx + 15;
+                    wx < sx + obj.width - 10;
+                    wx += 35
+                ) {
+
+                    ctx.fillRect(
+                        wx,
+                        sy + 50,
+                        18,
+                        25
+                    );
+
+                }
+
+            }
+
+
+            if (
+                obj.type ===
+                "tree"
+            ) {
+
+                ctx.fillStyle =
+                    "#59452e";
+
+                ctx.fillRect(
+                    sx - 6,
+                    sy,
+                    12,
+                    28
+                );
+
+                ctx.fillStyle =
+                    "#345a37";
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    sx,
+                    sy - 8,
+                    obj.radius,
+                    0,
+                    Math.PI * 2
+                );
+
+                ctx.fill();
+
+            }
+
+
+            if (
+                obj.type ===
+                "collectable"
+                &&
+                !obj.collected
+            ) {
+
+                ctx.fillStyle =
+                    "#e4ad3c";
+
+                ctx.beginPath();
+
+                ctx.arc(
+                    sx,
+                    sy,
+                    obj.radius,
+                    0,
+                    Math.PI * 2
+                );
+
+                ctx.fill();
+
+                ctx.font =
+                    "12px Arial";
+
+                ctx.textAlign =
+                    "center";
+
+                ctx.fillText(
+                    "🔩",
+                    sx,
+                    sy + 4
+                );
+
+            }
+
+        }
+
+    }
+
+
+    /*
+       LOCAIS
+    */
+
+    drawSpecialLocation(
+        locations.workshop,
+        "🏍️",
+        "OFICINA SPEED"
+    );
+
+    drawSpecialLocation(
+        locations.skatepark,
+        "🛹",
+        "SKATE PARK"
+    );
+
+    drawSpecialLocation(
+        locations.gasStation,
+        "⛽",
+        "POSTO"
+    );
+
+
+    /*
+       PLAYER
+    */
+
+    drawPlayer();
+
+}
+
+
+/* =========================================================
+   PLAYER
+========================================================= */
+
+function drawPlayer() {
+
+    const x =
+        width / 2;
+
+    const y =
+        height / 2;
+
+    /*
+       sombra
+    */
+
+    ctx.fillStyle =
+        "rgba(0,0,0,.25)";
+
+    ctx.beginPath();
+
+    ctx.ellipse(
+        x,
+        y + 17,
+        17,
+        8,
+        0,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+
+    /*
+       corpo
+    */
+
+    ctx.fillStyle =
+        "#d95757";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x,
+        y,
+        15,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+
+    /*
+       cabeça
+    */
+
+    ctx.fillStyle =
+        "#f0bd91";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x,
+        y - 13,
+        8,
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+
+    /*
+       direção
+    */
+
+    ctx.fillStyle =
+        "white";
+
+    ctx.beginPath();
+
+    ctx.arc(
+        x +
+        Math.cos(
+            state.player.direction
+        ) * 11,
+
+        y +
+        Math.sin(
+            state.player.direction
+        ) * 11,
+
+        3,
+
+        0,
+        Math.PI * 2
+    );
+
+    ctx.fill();
+
+}
+
+
+/* =========================================================
+   PLAYER UPDATE
+========================================================= */
+
+function updatePlayer(
+    dt
+) {
+
+    const movement =
+        keyboardInput();
+
+    let dx =
+        movement.x;
+
+    let dy =
+        movement.y;
+
+    if (
+        Math.abs(dx) > .05 ||
+        Math.abs(dy) > .05
+    ) {
+
+        const length =
+            Math.sqrt(
+                dx*dx +
+                dy*dy
+            );
+
+        dx /= length;
+        dy /= length;
+
+
+        const speed =
+            CONFIG.playerSpeed;
+
+        const newX =
+            state.player.x +
+            dx * speed * dt;
+
+        const newY =
+            state.player.y +
+            dy * speed * dt;
+
+
+        if (
+            !collidesWorld(
+                newX,
+                state.player.y
+            )
+        ) {
+
+            state.player.x =
+                newX;
+
+        }
+
+        if (
+            !collidesWorld(
+                state.player.x,
+                newY
+            )
+        ) {
+
+            state.player.y =
+                newY;
+
+        }
+
+
+        state.player.direction =
+            Math.atan2(
+                dy,
+                dx
+            );
+
+    }
+
+
+    /*
+       Câmera segue suavemente.
+    */
+
+    state.camera.x +=
+        (
+            state.player.x -
+            state.camera.x
+        ) *
+        CONFIG.cameraSmooth;
+
+    state.camera.y +=
+        (
+            state.player.y -
+            state.camera.y
+        ) *
+        CONFIG.cameraSmooth;
+
+
+    updateChunks();
+
+    checkInteractions();
+
+}
+
+
+/* =========================================================
+   INTERACTION
+========================================================= */
+
+const interaction =
+    document.getElementById(
+        "interaction"
+    );
+
+const interactionText =
+    document.getElementById(
+        "interactionText"
+    );
+
+let currentInteraction =
+    null;
+
+
+function distanceTo(
+    x,
+    y
+) {
+
+    const dx =
+        state.player.x - x;
+
+    const dy =
+        state.player.y - y;
+
+    return Math.sqrt(
+        dx*dx +
+        dy*dy
+    );
+
+}
+
+
+function checkInteractions() {
+
+    currentInteraction = null;
+
+    /*
+       Oficina
+    */
+
+    const workshopCenterX =
+        locations.workshop.x +
+        locations.workshop.width / 2;
+
+    const workshopCenterY =
+        locations.workshop.y +
+        locations.workshop.height / 2;
+
+    if (
+        distanceTo(
+            workshopCenterX,
+            workshopCenterY
+        ) <
+        CONFIG.interactionDistance +
+        100
+    ) {
+
+        currentInteraction =
+            "workshop";
+
+        interactionText.textContent =
+            "Entrar na oficina";
+
+        interaction.style.display =
+            "block";
+
+        return;
+
+    }
+
+
+    /*
+       Coletáveis
+    */
+
+    for (
+        const [, chunk]
+        of chunks
+    ) {
+
+        for (
+            const obj
+            of chunk.objects
+        ) {
+
+            if (
+                obj.type ===
+                "collectable"
+                &&
+                !obj.collected
+            ) {
+
+                if (
+                    distanceTo(
+                        obj.x,
+                        obj.y
+                    ) <
+                    CONFIG.interactionDistance
+                ) {
+
+                    currentInteraction =
+                        obj;
+
+                    interactionText.textContent =
+                        "Coletar sucata";
+
+                    interaction.style.display =
+                        "block";
+
+                    return;
+
+                }
+
+            }
+
+        }
+
+    }
+
+
+    interaction.style.display =
+        "none";
+
+}
+
+
+/* =========================================================
+   ACTION A
+========================================================= */
+
+document
+    .getElementById("actionA")
+    .addEventListener(
+        "click",
+        interact
+    );
+
+
+function interact() {
+
+    if (
+        !currentInteraction
+    )
+        return;
+
+
+    if (
+        currentInteraction ===
+        "workshop"
+    ) {
+
+        openModal(
+            "workshopModal"
+        );
+
+        return;
+
+    }
+
+
+    if (
+        currentInteraction.type ===
+        "collectable"
+    ) {
+
+        currentInteraction.collected =
+            true;
+
+        addItem(
+            "scrap"
+        );
+
+        showToast(
+            "🔩 Sucata adicionada ao inventário"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   INVENTORY
+========================================================= */
+
+function addItem(
+    id
+) {
+
+    const item =
+        state.inventory.find(
+            i => i.id === id
+        );
+
+    if (item) {
+
+        item.quantity++;
+
+    }
+
+    else {
+
+        state.inventory.push({
+
+            id,
+
+            name: id,
+            icon: "📦",
+            quantity: 1
+
+        });
+
+    }
+
+    renderInventory();
+
+}
+
+
+function renderInventory() {
+
+    const grid =
+        document.getElementById(
+            "inventoryGrid"
+        );
+
+    grid.innerHTML = "";
+
+    for (
+        let i = 0;
+        i < 15;
+        i++
+    ) {
+
+        const item =
+            state.inventory[i];
+
+        const slot =
+            document.createElement(
+                "div"
+            );
+
+        slot.className =
+            "slot";
+
+        if (item) {
+
+            slot.innerHTML = `
+
+                ${item.icon}
+
+                <span class="slot-count">
+                    ${item.quantity}
+                </span>
+
+            `;
+
+            slot.title =
+                item.name;
+
+        }
+
+        grid.appendChild(
+            slot
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   MODALS
+========================================================= */
+
+function openModal(
+    id
+) {
+
+    document
+        .getElementById(id)
+        .classList.add(
+            "active"
+        );
+
+}
+
+
+function closeModal(
+    id
+) {
+
+    document
+        .getElementById(id)
+        .classList.remove(
+            "active"
+        );
+
+}
+
+
+document
+    .querySelectorAll(
+        "[data-close]"
+    )
+    .forEach(
+        button => {
+
+            button.addEventListener(
+                "click",
+                () => {
+
+                    closeModal(
+                        button.dataset.close
+                    );
+
+                }
+            );
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "inventoryBtn"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            renderInventory();
+
+            openModal(
+                "inventoryModal"
+            );
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "phoneBtn"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            openModal(
+                "phoneModal"
+            );
+
+        }
+    );
+
+
+/* =========================================================
+   PHONE APPS
+========================================================= */
+
+document
+    .getElementById(
+        "phoneMap"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            closeModal(
+                "phoneModal"
+            );
+
+            openModal(
+                "mapModal"
+            );
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "phoneMissions"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            closeModal(
+                "phoneModal"
+            );
+
+            openModal(
+                "missionModal"
+            );
+
+        }
+    );
+
+
+document
+    .getElementById(
+        "phoneItems"
+    )
+    .addEventListener(
+        "click",
+        () => {
+
+            closeModal(
+                "phoneModal"
+            );
+
+            renderInventory();
+
+            openModal(
+                "inventoryModal"
+            );
+
+        }
+    );
+
+
+/* =========================================================
+   WORKSHOP
+========================================================= */
+
+function workshopAction(
+    action
+) {
+
+    if (
+        action ===
+        "diagnóstico"
+    ) {
+
+        showToast(
+            "🔍 Sistema de diagnóstico iniciado"
+        );
+
+    }
+
+    if (
+        action ===
+        "reparo"
+    ) {
+
+        showToast(
+            "🔧 Nenhum reparo disponível ainda"
+        );
+
+    }
+
+    if (
+        action ===
+        "customização"
+    ) {
+
+        showToast(
+            "🎨 Sistema de customização em desenvolvimento"
+        );
+
+    }
+
+    if (
+        action ===
+        "teste"
+    ) {
+
+        showToast(
+            "🏁 Teste de moto preparado para a próxima versão"
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   TOAST
+========================================================= */
+
+let toastTimer;
+
+function showToast(
+    message
+) {
+
+    const toast =
+        document.getElementById(
+            "toast"
+        );
+
+    toast.textContent =
+        message;
+
+    toast.classList.add(
+        "show"
+    );
+
+    clearTimeout(
+        toastTimer
+    );
+
+    toastTimer =
+        setTimeout(
+            () => {
+
+                toast.classList.remove(
+                    "show"
+                );
+
+            },
+            2300
+        );
+
+}
+
+
+/* =========================================================
+   SAVE
+========================================================= */
+
+function saveGame() {
+
+    localStorage.setItem(
+        "streetLifeSave",
+        JSON.stringify(state)
+    );
+
+}
+
+
+function loadGame() {
+
+    const saved =
+        localStorage.getItem(
+            "streetLifeSave"
+        );
+
+    if (!saved)
+        return;
+
+    try {
+
+        const data =
+            JSON.parse(saved);
+
+        if (
+            data.player
+        ) {
+
+            state.player =
+                data.player;
+
+        }
+
+        if (
+            data.money
+        ) {
+
+            state.money =
+                data.money;
+
+            document
+                .getElementById(
+                    "money"
+                )
+                .textContent =
+                state.money;
+
+        }
+
+        if (
+            data.inventory
+        ) {
+
+            state.inventory =
+                data.inventory;
+
+        }
+
+    }
+
+    catch(error) {
+
+        console.warn(
+            "Save inválido",
+            error
+        );
+
+    }
+
+}
+
+
+/* =========================================================
+   GAME LOOP
+========================================================= */
+
+let lastTime =
+    performance.now();
+
+
+function gameLoop(
+    now
+) {
+
+    const dt =
+        Math.min(
+            (now - lastTime) / 1000,
+            0.05
+        );
+
+    lastTime =
+        now;
+
+    updatePlayer(
+        dt
+    );
+
+    drawWorld();
+
+    requestAnimationFrame(
+        gameLoop
+    );
+
+}
+
+
+/* =========================================================
+   AUTO SAVE
+========================================================= */
+
+setInterval(
+    saveGame,
+    10000
+);
+
+
+/* =========================================================
+   START
+========================================================= */
+
+loadGame();
+
+updateChunks();
+
+renderInventory();
+
+requestAnimationFrame(
+    gameLoop
+);
+
+</script>
+
+</body>
+</html>
