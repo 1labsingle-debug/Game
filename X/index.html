@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    >
+
+    <title>Mundo Isométrico</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+    <!-- HUD SUPERIOR -->
+    <header id="top-bar">
+
+        <div class="game-title">
+            ⚡ MUNDO ISOMÉTRICO
+        </div>
+
+        <div class="stats-container">
+
+            <div class="stat-box">
+                ⚡
+                <span id="satsDisplay">1.250</span>
+            </div>
+
+            <div class="stat-box">
+                📍
+                <span id="coordsDisplay">0, 0</span>
+            </div>
+
+        </div>
+
+    </header>
+
+
+    <!-- CANVAS DO JOGO -->
+    <canvas id="gameCanvas"></canvas>
+
+
+    <!-- INVENTÁRIO -->
+    <div id="inventory-bar">
+
+        <div class="inv-slot" title="Skate">
+            🛹
+            <span class="inv-qty">1</span>
+        </div>
+
+        <div class="inv-slot" title="Energético">
+            🥤
+            <span class="inv-qty">3</span>
+        </div>
+
+        <div class="inv-slot" title="Chave de Roda">
+            🔧
+            <span class="inv-qty">1</span>
+        </div>
+
+        <div class="inv-slot"></div>
+        <div class="inv-slot"></div>
+
+    </div>
+
+
+    <!-- CONTROLES -->
+    <div id="controls-container">
+
+        <!-- JOYSTICK -->
+        <div id="joystick-zone">
+            <div id="joystick-stick"></div>
+        </div>
+
+
+        <!-- BOTÕES -->
+        <div id="action-buttons">
+
+            <button
+                class="btn-action btn-a"
+                id="interactButton"
+            >
+                A
+            </button>
+
+            <button
+                class="btn-action btn-b"
+                id="itemButton"
+            >
+                B
+            </button>
+
+            <button
+                class="btn-action btn-c"
+                id="sprintButton"
+            >
+                C
+            </button>
+
+            <button
+                class="btn-action btn-phone"
+                id="phoneButton"
+            >
+                📱
+            </button>
+
+        </div>
+
+    </div>
+
+
+    <!-- SMARTPHONE -->
+    <aside id="smartphone">
+
+        <div class="phone-header">
+            SMARTPHONE
+        </div>
+
+
+        <div class="phone-apps">
+
+            <button class="app-icon" data-app="Mapa">
+
+                <span class="app-box">🗺️</span>
+
+                <span>Mapa</span>
+
+            </button>
+
+
+            <button class="app-icon" data-app="Thrnd Wallet">
+
+                <span class="app-box">⚡</span>
+
+                <span>Satoshis</span>
+
+            </button>
+
+
+            <button class="app-icon" data-app="Loja Ads">
+
+                <span class="app-box">🛍️</span>
+
+                <span>Lojas</span>
+
+            </button>
+
+
+            <button class="app-icon" data-app="Chat">
+
+                <span class="app-box">💬</span>
+
+                <span>Chat</span>
+
+            </button>
+
+
+            <button class="app-icon" data-app="SAC / Suporte">
+
+                <span class="app-box">🎧</span>
+
+                <span>SAC</span>
+
+            </button>
+
+        </div>
+
+    </aside>
+
+
+    <!-- MODAL -->
+    <div id="modal" class="modal">
+
+        <div class="modal-header">
+
+            <h3 id="modalTitle">
+                Info
+            </h3>
+
+            <button
+                class="btn-close"
+                id="closeModalButton"
+            >
+                &times;
+            </button>
+
+        </div>
+
+        <div id="modalBody"></div>
+
+    </div>
+
+
+    <!-- JAVASCRIPT -->
+    <script src="game.js"></script>
+
+</body>
+</html>
